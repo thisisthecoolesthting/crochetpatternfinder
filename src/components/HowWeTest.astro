@@ -1,0 +1,47 @@
+---
+// HowWeTest — renders the niche-spec editorial.methodology bullets
+// as a card-list. Mounted by /how-we-test.astro and /methodology.astro.
+//
+// Props:
+//   methodology: string[]  — 4-6 short bullets, one per evaluation criterion.
+//   title?: string         — defaults to "How we test".
+//
+// No JS. Tailwind layout. Cards use brand cream/terracotta tokens.
+//
+// Usage:
+//   <HowWeTest methodology={spec.editorial.methodology} />
+
+export interface Props {
+  methodology?: string[];
+  title?: string;
+}
+
+const { methodology = [], title = 'How we test' } = Astro.props;
+const items = Array.isArray(methodology) ? methodology.filter(Boolean) : [];
+---
+
+<section class="not-prose my-10" aria-labelledby="how-we-test-title">
+  <h2
+    id="how-we-test-title"
+    class="font-display text-2xl md:text-3xl text-ink-900 !mt-0 !mb-6"
+  >{title}</h2>
+
+  {items.length === 0 ? (
+    <p class="text-sm text-ink-500 italic">
+      Methodology bullets are configured per-niche in
+      <code class="font-mono text-xs">niche_specs/&lt;slug&gt;.json</code>
+      under <code class="font-mono text-xs">editorial.methodology</code>.
+    </p>
+  ) : (
+    <ul class="grid grid-cols-1 md:grid-cols-2 gap-4 !pl-0 list-none !my-0">
+      {items.map((bullet, i) => (
+        <li class="!my-0 rounded-2xl bg-cream-50 border border-cream-200/80 px-5 py-4 shadow-sm">
+          <p class="text-xs uppercase tracking-[0.18em] font-semibold text-terracotta-600 !mt-0 !mb-1">
+            Step {i + 1}
+          </p>
+          <p class="text-sm text-ink-900 leading-relaxed !my-0">{bullet}</p>
+        </li>
+      ))}
+    </ul>
+  )}
+</section>

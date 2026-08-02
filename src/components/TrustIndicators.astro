@@ -1,0 +1,43 @@
+---
+export interface TrustItem {
+  label: string;
+  icon: 'shield' | 'clock' | 'ban';
+}
+
+export interface Props {
+  items?: TrustItem[];
+}
+
+const defaultItems: TrustItem[] = [
+  { label: 'Independent editorial', icon: 'shield' },
+  { label: 'Weekly research updates', icon: 'clock' },
+  { label: 'No pay-to-play', icon: 'ban' },
+];
+
+const { items = defaultItems } = Astro.props;
+---
+
+<ul class="flex flex-wrap gap-2 md:gap-3" role="list" aria-label="Editorial trust indicators">
+  {items.map((item) => (
+    <li class="trust-badge">
+      {item.icon === 'shield' && (
+        <svg class="w-4 h-4 text-sage-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      )}
+      {item.icon === 'clock' && (
+        <svg class="w-4 h-4 text-sage-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 6v6l4 2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      )}
+      {item.icon === 'ban' && (
+        <svg class="w-4 h-4 text-sage-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <path d="m4.9 4.9 14.2 14.2" stroke-linecap="round" />
+        </svg>
+      )}
+      <span>{item.label}</span>
+    </li>
+  ))}
+</ul>

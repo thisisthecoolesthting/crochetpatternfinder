@@ -1,0 +1,139 @@
+---
+import BrandMark from '@/components/BrandMark.astro';
+import spawnHome from '@/data/spawn-home.json';
+
+type NavItem = { href: string; label: string };
+
+const fallbackNav: NavItem[] = [
+  { href: '/', label: 'Home' },
+  { href: '/pillars', label: 'Guides' },
+  { href: '/articles', label: 'Articles' },
+  { href: '/products', label: 'Reviews' },
+  { href: '/about', label: 'About' },
+];
+
+const fromSpawn = Array.isArray((spawnHome as { navigation?: NavItem[] }).navigation)
+  ? (spawnHome as { navigation: NavItem[] }).navigation
+  : null;
+
+const navItems = fromSpawn?.length ? fromSpawn : fallbackNav;
+---
+
+<header class="bg-cream-50 relative z-30">
+  <div class="max-w-6xl mx-auto px-3 sm:px-5 pt-4 sm:pt-5">
+    <div
+      id="site-nav-shell"
+      class="bg-cream-100/85 backdrop-blur-sm rounded-[1.75rem] md:rounded-full shadow-soft transition-all duration-300"
+    >
+      {/* Top bar: brand + hamburger (mobile) / inline nav (desktop) */}
+      <div class="px-5 sm:px-6 py-3 md:py-4 flex items-center justify-between gap-3">
+        <a href="/" class="no-underline flex items-baseline min-w-0 shrink">
+          <BrandMark splitWordmark />
+        </a>
+
+        {/* Desktop nav — hidden on mobile */}
+        <nav class="hidden md:block">
+          <ul class="flex gap-5 md:gap-7 text-sm font-medium">
+            {navItems.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  class="text-ink-700 hover:text-terracotta-500 no-underline transition-colors duration-200"
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Mobile hamburger toggle — hidden on md+ */}
+        <button
+          id="site-nav-toggle"
+          type="button"
+          aria-label="Open menu"
+          aria-expanded="false"
+          aria-controls="site-nav-mobile"
+          class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/70 text-ink-900 shadow-soft
+                 hover:bg-white transition-colors duration-200 shrink-0"
+        >
+          <svg class="w-5 h-5 icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <line x1="4" y1="7" x2="20" y2="7" />
+            <line x1="4" y1="12" x2="20" y2="12" />
+            <line x1="4" y1="17" x2="20" y2="17" />
+          </svg>
+          <svg class="w-5 h-5 icon-close hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <line x1="6" y1="6" x2="18" y2="18" />
+            <line x1="18" y1="6" x2="6" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Mobile expandable panel — collapsed by default */}
+      <nav
+        id="site-nav-mobile"
+        class="md:hidden overflow-hidden max-h-0 transition-[max-height] duration-300 ease-out"
+        aria-hidden="true"
+      >
+        <ul class="px-5 pb-4 pt-1 space-y-1 text-base font-medium">
+          {navItems.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                class="block px-4 py-3 rounded-2xl text-ink-700 hover:bg-white hover:text-terracotta-600 no-underline transition-colors duration-200"
+              >
+                {item.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<script>
+  (function () {
+    const toggle = document.getElementById('site-nav-toggle');
+    const panel  = document.getElementById('site-nav-mobile');
+    if (!toggle || !panel) return;
+
+    const iconOpen  = toggle.querySelector('.icon-open');
+    const iconClose = toggle.querySelector('.icon-close');
+
+    function setOpen(open) {
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+      if (open) {
+        panel.style.maxHeight = panel.scrollHeight + 'px';
+        iconOpen?.classList.add('hidden');
+        iconClose?.classList.remove('hidden');
+      } else {
+        panel.style.maxHeight = '0px';
+        iconOpen?.classList.remove('hidden');
+        iconClose?.classList.add('hidden');
+      }
+    }
+
+    toggle.addEventListener('click', function () {
+      const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+      setOpen(!isOpen);
+    });
+
+    // Close when a link inside the panel is tapped (helps single-page-feeling nav).
+    panel.addEventListener('click', function (e) {
+      const target = e.target;
+      if (target && target.closest('a')) {
+        setOpen(false);
+      }
+    });
+
+    // Reset state if the viewport crosses back to desktop width.
+    const mq = window.matchMedia('(min-width: 768px)');
+    function handleMQ() {
+      if (mq.matches) setOpen(false);
+    }
+    mq.addEventListener ? mq.addEventListener('change', handleMQ) : mq.addListener(handleMQ);
+  })();
+</script>

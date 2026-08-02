@@ -1,0 +1,58 @@
+---
+/**
+ * Mobile-only sticky ad bar (bottom of viewport). Shown when Ezoic is not wired yet
+ * so phone readers still see an ad placement; replace with live network when configured.
+ */
+import home from '@/data/spawn-home.json';
+
+type SpawnHomeDist = {
+  distribution?: {
+    ads?: { provider?: string; site_id?: string; slot_ids?: Record<string, string> };
+  };
+};
+const dist = (home as SpawnHomeDist).distribution;
+const provider = dist?.ads?.provider ?? 'none';
+const slotId = dist?.ads?.slot_ids?.mobile_sticky ?? dist?.ads?.slot_ids?.footer ?? '';
+const showEzoic = provider === 'ezoic' && dist?.ads?.site_id && slotId;
+---
+
+<div
+  id="sticky-ad-bar"
+  class="md:hidden fixed bottom-0 left-0 right-0 z-40 px-3 pb-3 pointer-events-none"
+  data-sticky-ad-bar
+>
+  <div
+    class="relative bg-white/95 backdrop-blur-sm rounded-[1.5rem] shadow-soft-lg border border-cream-200/70
+           p-3 pointer-events-auto text-center"
+  >
+    {showEzoic ? (
+      <div id={`ezoic-pub-ad-placeholder-${slotId}`} class="min-h-[50px] rounded-xl bg-ink-50/40" />
+    ) : (
+      <div
+        class="min-h-[50px] rounded-xl bg-gradient-to-r from-cream-100 to-cream-200/80 flex items-center justify-center"
+        aria-label="Advertisement"
+      >
+        <span class="text-[10px] uppercase tracking-[0.2em] text-ink-500 font-semibold">Sponsored</span>
+      </div>
+    )}
+    <button
+      type="button"
+      aria-label="Dismiss ad"
+      data-sticky-ad-dismiss
+      class="absolute top-1 right-2 w-7 h-7 rounded-full bg-cream-100 text-ink-500 text-sm leading-none"
+    >
+      ×
+    </button>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const bar = document.querySelector('[data-sticky-ad-bar]');
+    const btn = document.querySelector('[data-sticky-ad-dismiss]');
+    if (!bar || !btn) return;
+    btn.addEventListener('click', () => {
+      bar.style.display = 'none';
+    });
+  })();
+</script>

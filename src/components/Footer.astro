@@ -1,0 +1,42 @@
+---
+import home from '@/data/spawn-home.json';
+const b = home.brand;
+const dmeta = (home as { defaultMetaDescription?: string }).defaultMetaDescription || b.taglineShort;
+const year = new Date().getFullYear();
+---
+
+<footer class="mt-24 pb-8">
+  <div class="max-w-6xl mx-auto px-5">
+    <div class="bg-cream-100 rounded-[2.5rem] md:rounded-[3rem] shadow-soft px-6 md:px-10 py-12 md:py-14">
+      <div class="grid md:grid-cols-3 gap-10 md:gap-8 text-sm text-ink-700">
+        <div>
+          <p class="font-display text-2xl text-rose-deep mb-3">{b.fullName}</p>
+          <p class="leading-relaxed">
+            {dmeta}
+          </p>
+        </div>
+        <div>
+          <p class="font-semibold mb-3 text-ink-900 uppercase tracking-[0.15em] text-xs">Read</p>
+          <ul class="space-y-2">
+            <li><a href="/pillars" class="hover:text-terracotta-600 no-underline">Guides</a></li>
+            <li><a href="/products" class="hover:text-terracotta-600 no-underline">Product reviews</a></li>
+            <li><a href="/articles" class="hover:text-terracotta-600 no-underline">Articles</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="font-semibold mb-3 text-ink-900 uppercase tracking-[0.15em] text-xs">About</p>
+          <ul class="space-y-2">
+            <li><a href="/about" class="hover:text-terracotta-600 no-underline">About us</a></li>
+            <li><a href="/disclosure" class="hover:text-terracotta-600 no-underline">Affiliate disclosure</a></li>
+            <li><a href="/privacy" class="hover:text-terracotta-600 no-underline">Privacy</a></li>
+            <li><a href="/contact" class="hover:text-terracotta-600 no-underline">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-10 pt-6 border-t border-cream-200/70 text-center text-xs text-ink-500">
+        &copy; {year} {b.fullName}. We may earn a commission from qualifying purchases.
+      </div>
+    </div>
+  </div>
+</footer>

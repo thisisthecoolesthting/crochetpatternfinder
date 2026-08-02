@@ -1,0 +1,113 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { siteOrigin } from '@/utils/site-origin';
+import home from '@/data/spawn-home.json';
+
+export async function getStaticPaths() {
+  const authors = await getCollection('authors');
+  return authors.map((a) => ({ params: { slug: a.slug }, props: { entry: a } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+const b = home.brand;
+const o = siteOrigin();
+const defSlug = (home as { defaultAuthorSlug?: string }).defaultAuthorSlug || 'default-author';
+const allArticles = await getCollection('articles', ({ data }) => data.status === 'published');
+const allPillars = await getCollection('pillars', ({ data }) => data.status === 'published');
+const byThem = {
+  articles: allArticles
+    .filter((a) => (a.data.author ?? defSlug) === entry.slug)
+    .sort((a, b) => +new Date(b.data.publishedAt) - +new Date(a.data.publishedAt))
+    .slice(0, 6),
+  pillars: allPillars
+    .filter((p) => (p.data.author ?? defSlug) === entry.slug)
+    .sort((a, b) => +new Date(b.data.publishedAt) - +new Date(a.data.publishedAt))
+    .slice(0, 3),
+};
+
+const personSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  '@id': `${o}/authors/${entry.slug}/#person`,
+  name: entry.data.name,
+  jobTitle: entry.data.role,
+  description: entry.data.shortBio,
+  image: `${o}${entry.data.photoUrl}`,
+  url: `${o}/authors/${entry.slug}/`,
+  worksFor: {
+    '@type': 'Organization',
+    name: b.fullName,
+    url: o,
+  },
+};
+---
+
+<BaseLayout
+  title={`${entry.data.name} — ${entry.data.role}`}
+  description={entry.data.shortBio}
+  image={entry.data.photoUrl}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(personSchema)} />
+
+  <article class="container-prose py-12 md:py-16">
+    <header class="flex flex-col md:flex-row items-center md:items-start gap-8 mb-10">
+      <img
+        src={entry.data.photoUrl}
+        alt={entry.data.name}
+        width="160"
+        height="160"
+        class="w-40 h-40 rounded-full object-cover shadow-soft ring-4 ring-white !my-0"
+      />
+      <div class="text-center md:text-left">
+        <p class="text-terracotta-600 text-xs uppercase tracking-[0.2em] font-semibold mb-2">
+          {entry.data.role}
+        </p>
+        <h1 class="font-display text-4xl md:text-5xl text-ink-900 !mt-0 mb-3 leading-tight">
+          {entry.data.name}
+        </h1>
+        <p class="text-ink-700 text-lg leading-relaxed max-w-prose !mt-0">
+          {entry.data.shortBio}
+        </p>
+      </div>
+    </header>
+
+    <div class="prose prose-lg prose-ink max-w-none mb-12">
+      <Content />
+    </div>
+
+    {byThem.pillars.length > 0 && (
+      <section class="mb-14">
+        <h2 class="font-display text-2xl text-ink-900 mb-6">In-depth guides</h2>
+        <ul class="space-y-4 !pl-0 list-none">
+          {byThem.pillars.map((p) => (
+            <li class="!my-0">
+              <a href={`/pillars/${p.slug}/`}
+                 class="text-ink-900 hover:text-terracotta-600 font-medium no-underline">
+                {p.data.title}
+              </a>
+              <p class="text-sm text-ink-500 !mt-0.5 !mb-0">{p.data.excerpt}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {byThem.articles.length > 0 && (
+      <section>
+        <h2 class="font-display text-2xl text-ink-900 mb-6">Recent articles</h2>
+        <ul class="space-y-3 !pl-0 list-none">
+          {byThem.articles.map((a) => (
+            <li class="!my-0">
+              <a href={`/articles/${a.slug}/`}
+                 class="text-ink-900 hover:text-terracotta-600 no-underline">
+                {a.data.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </article>
+</BaseLayout>

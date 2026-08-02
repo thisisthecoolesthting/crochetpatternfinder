@@ -1,0 +1,39 @@
+---
+export interface Props {
+  imageUrl: string;
+  caption?: string;
+  badge?: string;
+  alt?: string;
+}
+
+const {
+  imageUrl,
+  caption = '',
+  badge = '',
+  alt = '',
+} = Astro.props;
+---
+
+<figure class="relative rounded-2xl overflow-hidden border border-cream-50/15 shadow-soft-lg min-h-[280px] md:min-h-[340px] lg:min-h-[380px]">
+  <img
+    src={imageUrl}
+    alt={alt}
+    loading="eager"
+    class="absolute inset-0 w-full h-full object-cover"
+  />
+  <div aria-hidden="true" class="absolute inset-0 bg-gradient-to-t from-ink-900/85 via-ink-900/20 to-transparent"></div>
+  {badge && (
+    <figcaption class="absolute top-4 left-4 right-4">
+      <span class="inline-block font-mono text-[10px] tracking-[0.16em] uppercase bg-ink-900/70 text-cream-50 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+        {badge}
+      </span>
+    </figcaption>
+  )}
+  {caption && (
+    <figcaption class="absolute bottom-0 left-0 right-0 px-4 py-4 md:px-5 md:py-5">
+      <p class="text-sm md:text-base text-cream-50/95 leading-snug max-w-[32ch] font-display">
+        {caption}
+      </p>
+    </figcaption>
+  )}
+</figure>

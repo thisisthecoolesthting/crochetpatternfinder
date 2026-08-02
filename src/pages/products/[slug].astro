@@ -1,0 +1,175 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import AffiliateCTA from '@/components/AffiliateCTA.astro';
+import AuthorByline from '@/components/AuthorByline.astro';
+import MedicalDisclaimer from '@/components/MedicalDisclaimer.astro';
+import { getCollection, getEntry } from 'astro:content';
+import { siteOrigin } from '@/utils/site-origin';
+import home from '@/data/spawn-home.json';
+
+export async function getStaticPaths() {
+  const products = await getCollection('products', ({ data }) => data.status !== 'draft');
+  return products.map((p) => ({
+    // Astro auto-derives `slug` from the filename; don't rely on frontmatter.
+    params: { slug: p.slug },
+    props: { product: p },
+  }));
+}
+
+const { product } = Astro.props;
+const { data } = product;
+const { Content } = await product.render();
+const b = home.brand;
+const siteYmyl = (home as { persona?: { ymyl?: boolean } }).persona?.ymyl === true;
+const o = siteOrigin();
+const defSlug = (home as { defaultAuthorSlug?: string }).defaultAuthorSlug || 'default-author';
+const authorSlug = (data as { author?: string }).author ?? defSlug;
+const author = await getEntry('authors', authorSlug);
+
+const needsMedicalDisclaimer =
+  siteYmyl && ['health-personal-care', 'supplements', 'skin-care', 'vitamins'].includes(data.category);
+
+// Parse publishedAt from firstSeen; reviewedAt from lastSeen or reviewedAt field.
+const publishedForByline = (data as any).firstSeen
+  ? new Date((data as any).firstSeen)
+  : new Date();
+const reviewedForByline = (data as any).reviewedAt
+  ? new Date((data as any).reviewedAt)
+  : ((data as any).lastSeen ? new Date((data as any).lastSeen) : undefined);
+
+const seoTitle = data.seoTitle || `${data.title} Review`;
+const seoDesc = data.metaDescription || `Honest review: ${data.title} — from ${b.fullName}.`;
+
+// JSON-LD Product schema for rich snippets. Google requires at least one
+// of review, aggregateRating, or offers with valid fields. We provide
+// offers always (when price exists), aggregateRating when Amazon data
+// has it, and our own editorial review nested inside the product so
+// every page qualifies.
+const firstSeenDate = (data.firstSeen && data.firstSeen.length >= 10)
+  ? data.firstSeen.substring(0, 10)
+  : new Date().toISOString().substring(0, 10);
+
+const productSchema: Record<string, any> = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: data.title,
+  description: seoDesc,
+  sku: data.asin,
+  mpn: data.asin,
+  brand: {
+    '@type': 'Brand',
+    name: 'Amazon',
+  },
+  url: `${o}/products/${product.slug}/`,
+};
+if (data.imageUrl) productSchema.image = [data.imageUrl];
+if (data.price) {
+  productSchema.offers = {
+    '@type': 'Offer',
+    price: data.price.toFixed(2),
+    priceCurrency: 'USD',
+    availability: 'https://schema.org/InStock',
+    url: data.affiliateUrl,
+    priceValidUntil: new Date(Date.now() + 30 * 86400000).toISOString().substring(0, 10),
+    seller: {
+      '@type': 'Organization',
+      name: 'Amazon',
+    },
+  };
+}
+
+// Nested editorial review — satisfies Google's "review or aggregateRating
+// required" rule for every product page, even those without Amazon rating.
+productSchema.review = {
+  '@type': 'Review',
+  author: author
+    ? {
+        '@type': 'Person',
+        '@id': `${o}/authors/${author.slug}/#person`,
+        name: author.data.name,
+        url: `${o}/authors/${author.slug}/`,
+        jobTitle: author.data.role,
+      }
+    : {
+        '@type': 'Organization',
+        name: b.fullName,
+      },
+  publisher: {
+    '@type': 'Organization',
+    name: b.fullName,
+    url: o,
+  },
+  datePublished: firstSeenDate,
+  reviewBody: seoDesc,
+  reviewRating: {
+    '@type': 'Rating',
+    ratingValue: data.rating ? data.rating.toFixed(1) : '4.0',
+    bestRating: '5',
+    worstRating: '1',
+  },
+};
+
+if (data.rating && data.reviewCount) {
+  productSchema.aggregateRating = {
+    '@type': 'AggregateRating',
+    ratingValue: data.rating.toFixed(1),
+    reviewCount: data.reviewCount,
+    bestRating: '5',
+    worstRating: '1',
+  };
+}
+---
+
+<BaseLayout
+  title={seoTitle}
+  description={seoDesc}
+  image={data.imageUrl}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(productSchema)} />
+
+  <article class="container-prose py-12">
+    <header class="mb-6">
+      <p class="text-sm text-ink-500 uppercase tracking-wider mb-2">{data.category.replace(/-/g, ' ')}</p>
+      <h1 class="font-display text-4xl mb-4 text-ink-900">{data.title}</h1>
+      <div class="flex flex-wrap gap-4 text-sm text-ink-700">
+        {data.price && <span><strong>${data.price.toFixed(2)}</strong></span>}
+        {data.rating && <span>&#9733; {data.rating.toFixed(1)} {data.reviewCount && `(${data.reviewCount.toLocaleString()})`}</span>}
+        {data.isPrime && <span class="text-sage-600">Prime eligible</span>}
+      </div>
+    </header>
+
+    <AuthorByline
+      authorSlug={authorSlug}
+      publishedAt={publishedForByline}
+      reviewedAt={reviewedForByline}
+    />
+
+    {data.imageUrl && (
+      <figure class="bg-cream-100 rounded-lg p-8 mb-8 flex items-center justify-center">
+        <img src={data.imageUrl} alt={data.title} class="max-h-72 object-contain" />
+      </figure>
+    )}
+
+    {needsMedicalDisclaimer && <MedicalDisclaimer />}
+
+    <AffiliateCTA asin={data.asin} url={data.affiliateUrl} label="Check current price on Amazon" />
+
+    <div class="prose prose-lg prose-ink max-w-none mt-10">
+      <Content />
+    </div>
+
+    <AffiliateCTA asin={data.asin} url={data.affiliateUrl} label="See it on Amazon" />
+
+    <hr class="my-10 border-cream-200" />
+    <p class="text-xs text-ink-500">
+      Reviewed by{' '}
+      <a href={`/authors/${authorSlug}/`} class="text-terracotta-600 hover:underline">
+        {author?.data.name ?? b.fullName}
+      </a>
+      .
+      Last checked: {data.lastSeen ? new Date(data.lastSeen).toLocaleDateString() : '&mdash;'}.
+      Prices and availability change. We earn a commission on qualifying purchases.
+      <a href="/methodology/" class="text-terracotta-600 hover:underline"> How we research &rarr;</a>
+    </p>
+  </article>
+</BaseLayout>

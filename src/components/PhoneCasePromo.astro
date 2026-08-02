@@ -1,0 +1,47 @@
+---
+/**
+ * First-party cross-sell to phonecasesforall.com — enabled by default on new spawns.
+ * Config: spawn-home.json → distribution.phone_case_promo
+ */
+import home from '@/data/spawn-home.json';
+
+type PromoCfg = {
+  enabled?: boolean;
+  store_url?: string;
+  headline?: string;
+  subhead?: string;
+  cta?: string;
+  placement?: string;
+};
+
+const dist = (home as { distribution?: { phone_case_promo?: PromoCfg } }).distribution;
+const cfg = dist?.phone_case_promo ?? {};
+const enabled = cfg.enabled !== false;
+const storeUrl = (cfg.store_url || 'https://phonecasesforall.com').replace(/\/$/, '');
+const headline = cfg.headline || 'Custom phone cases, free shipping';
+const subhead = cfg.subhead || 'Thousands of designs for iPhone & Samsung — ships from our Printify shop.';
+const cta = cfg.cta || 'Browse cases →';
+const placement = Astro.props.placement ?? cfg.placement ?? 'sidebar';
+
+if (!enabled) return null;
+---
+
+<aside
+  class:list={[
+    'case-ad-slot not-prose rounded-2xl border border-cream-200/70 bg-gradient-to-br from-cream-50 to-white p-4 shadow-soft',
+    placement === 'inline' ? 'my-8' : 'mb-6',
+  ]}
+  data-phone-case-promo={placement}
+>
+  <p class="font-mono text-[10px] uppercase tracking-[0.14em] text-terracotta-600 mb-2">From our shop</p>
+  <p class="text-sm font-semibold text-ink-900 leading-snug">{headline}</p>
+  <p class="mt-1 text-xs text-ink-600 leading-relaxed">{subhead}</p>
+  <a
+    href={`${storeUrl}?utm_source=affiliate&utm_medium=case_promo&utm_campaign=${(cfg as PromoCfg & { utm_campaign?: string }).utm_campaign || Astro.url.hostname || 'site'}`}
+    rel="sponsored noopener"
+    target="_blank"
+    class="mt-3 inline-flex w-full items-center justify-center rounded-full bg-terracotta-500 px-4 py-2 text-xs font-semibold text-cream-50 hover:bg-terracotta-600 transition-colors no-underline"
+  >
+    {cta}
+  </a>
+</aside>

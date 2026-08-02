@@ -1,0 +1,64 @@
+---
+import home from '@/data/spawn-home.json';
+
+export interface Props {
+  /** Splits a trailing " Club" wordmark for editorial headers when `splitWordmark` is on. */
+  splitWordmark?: boolean;
+}
+
+const { splitWordmark = false } = Astro.props;
+const id = home.brand.identity;
+const wm = id.wordmark;
+const pos = id.mark.position || 'left-of-wordmark';
+const tracking =
+  wm.tracking === 'wide'
+    ? '0.08em'
+    : wm.tracking === 'slab'
+      ? '0.02em'
+      : wm.tracking === 'normal'
+        ? '0'
+        : '-0.04em';
+const textCase =
+  wm.case === 'uppercase' ? 'uppercase' : wm.case === 'small-caps' ? 'small-caps' : 'none';
+const weight = Number(wm.weight || 600);
+const showMark = Boolean(id.mark.svgPublicPath);
+const px = Math.round(Number(id.mark.sizeRem || 1.75) * 16);
+const full = home.brand.fullName;
+const clubIdx = full.lastIndexOf(' Club');
+const useSplit = splitWordmark && clubIdx > 0;
+const firstPart = useSplit ? full.slice(0, clubIdx) : full;
+const secondPart = useSplit ? full.slice(clubIdx) : '';
+---
+<div class:list={['brand-mark', pos === 'none' ? 'brand-mark--none' : `brand-mark--${pos}`]}>
+  {showMark ? <img src={id.mark.svgPublicPath} width={px} height={px} class="mark-svg" alt="" /> : null}
+  {useSplit ? (
+    <>
+      <span class="font-display text-xl md:text-2xl font-semibold text-rose-deep whitespace-nowrap">{firstPart}</span>
+      <span class="font-display text-xl md:text-2xl font-light text-ink-700 whitespace-nowrap">{secondPart}</span>
+    </>
+  ) : (
+    <span
+      class="wordmark font-display text-terracotta-600"
+      style={`font-weight:${weight};letter-spacing:${tracking};text-transform:${textCase === 'small-caps' ? 'none' : textCase};font-variant:${textCase === 'small-caps' ? 'small-caps' : 'normal'}`}
+    >
+      {full}
+    </span>
+  )}
+</div>
+<style>
+  .brand-mark {
+    display: flex;
+    align-items: baseline;
+    gap: 0.125rem;
+  }
+  .brand-mark--above-wordmark {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .brand-mark--right-of-wordmark {
+    flex-direction: row-reverse;
+  }
+  .brand-mark--none .mark-svg {
+    display: none;
+  }
+</style>

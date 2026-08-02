@@ -1,0 +1,23 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import NewsletterForm from '@/components/NewsletterForm.astro';
+import home from '@/data/spawn-home.json';
+const b = home.brand;
+const dmeta = (home as { defaultMetaDescription?: string }).defaultMetaDescription || b.taglineShort;
+---
+
+<BaseLayout
+  title={`About ${b.fullName}`}
+  description={dmeta}
+>
+  <section class="pt-8 md:pt-14 max-w-3xl mx-auto px-6">
+    <h1 class="font-display text-4xl text-ink-900 mb-6 !mt-0">About {b.fullName}</h1>
+    <p class="text-lg text-ink-700 leading-relaxed mb-8">
+      {home.about.body}
+    </p>
+  </section>
+
+  <section class="max-w-3xl mx-auto px-6 pb-16">
+    <NewsletterForm variant="inline" />
+  </section>
+</BaseLayout>

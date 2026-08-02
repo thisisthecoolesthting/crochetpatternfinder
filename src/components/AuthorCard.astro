@@ -1,0 +1,77 @@
+---
+// AuthorCard — compact author identity block for E-E-A-T.
+// Mounts at the top of every article via ArticleLayout / [slug].astro.
+//
+// Reads from the `authors` content collection at src/content/authors/<slug>.md.
+// Falls back to `_default` if the requested slug is missing — keeps spawned
+// sites from crashing before the operator generates a real author profile.
+//
+// Pure CSS, no client JS. Tailwind classes match the brand-layer palette.
+//
+// Usage:
+//   <AuthorCard authorSlug={spec.editorial.author_slug ?? "_default"} />
+
+import { getEntry } from 'astro:content';
+
+export interface Props {
+  authorSlug?: string;
+  showLinks?: boolean;
+}
+
+const { authorSlug = '_default', showLinks = true } = Astro.props;
+
+let author = await getEntry('authors', authorSlug);
+if (!author) {
+  // Hard fallback: never throw on missing author; render nothing rather than 500.
+  author = await getEntry('authors', '_default');
+}
+---
+
+{author && (
+  <div class="not-prose flex items-center gap-3 my-5 py-3 border-b border-cream-200/70">
+    <a href={`/authors/${author.slug}/`} class="block shrink-0 no-underline">
+      <img
+        src={author.data.photoUrl}
+        alt={author.data.name}
+        loading="lazy"
+        width="48"
+        height="48"
+        class="w-12 h-12 rounded-full object-cover ring-2 ring-cream-200/80 !my-0"
+      />
+    </a>
+    <div class="flex-1 min-w-0 leading-snug">
+      <p class="text-sm font-semibold text-ink-900 !mt-0 !mb-0.5">
+        <a
+          href={`/authors/${author.slug}/`}
+          class="text-ink-900 hover:text-terracotta-600 transition-colors no-underline"
+        >{author.data.name}</a>
+        <span class="text-ink-500 font-normal"> &middot; {author.data.role}</span>
+      </p>
+      <p class="text-xs text-ink-500 !mt-0 !mb-0 line-clamp-2">{author.data.shortBio}</p>
+      {showLinks && author.data.socials && (
+        <p class="text-xs text-ink-500 !mt-1 !mb-0 flex gap-3">
+          {author.data.socials.linkedin && (
+            <a
+              href={author.data.socials.linkedin}
+              rel="me noopener"
+              class="text-terracotta-600 hover:text-terracotta-500 no-underline"
+            >LinkedIn</a>
+          )}
+          {author.data.socials.instagram && (
+            <a
+              href={author.data.socials.instagram}
+              rel="me noopener"
+              class="text-terracotta-600 hover:text-terracotta-500 no-underline"
+            >Instagram</a>
+          )}
+          {author.data.socials.email && (
+            <a
+              href={`mailto:${author.data.socials.email}`}
+              class="text-terracotta-600 hover:text-terracotta-500 no-underline"
+            >Email</a>
+          )}
+        </p>
+      )}
+    </div>
+  </div>
+)}

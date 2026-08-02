@@ -1,0 +1,53 @@
+---
+import home from '@/data/spawn-home.json';
+const b = home.brand;
+// Shown for YMYL site configuration on tagged or health-adjacent content. Not a substitute
+// for professional care.
+//
+// Props:
+//   class?: string — extra Tailwind classes for layout overrides at the call site.
+//
+// Usage:
+//   <MedicalDisclaimer />
+//   <MedicalDisclaimer class="!my-12 max-w-prose mx-auto" />
+
+export interface Props {
+  class?: string;
+}
+
+const { class: extraClass = '' } = Astro.props;
+---
+
+<aside
+  class:list={[
+    'my-8 rounded-2xl bg-cream-100/80 border border-cream-200/80 px-5 py-4',
+    'text-sm text-ink-700 leading-relaxed flex items-start gap-3',
+    extraClass,
+  ]}
+  role="note"
+  aria-label="Medical disclaimer"
+>
+  <svg
+    class="w-5 h-5 flex-shrink-0 mt-0.5 text-terracotta-600"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="9" />
+    <line x1="12" y1="8" x2="12" y2="12.5" />
+    <circle cx="12" cy="16" r="0.8" fill="currentColor" />
+  </svg>
+  <p class="!my-0">
+    <strong class="text-ink-900 font-semibold">Editorial guidance only. Not medical advice.</strong>
+    {b.fullName} is journalism, research, and first-hand product testing &mdash;
+    not a substitute for your clinician. Consult your doctor for any health decisions,
+    especially alongside HRT, supplements, or other prescriptions.
+    <a href="/methodology/" class="text-terracotta-600 hover:text-terracotta-500 underline">
+      How we research &rarr;
+    </a>
+  </p>
+</aside>

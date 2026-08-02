@@ -1,0 +1,183 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ui-ux-pro-max spine layer — token slots filled per-site via tailwind.config + brand.config */
+@layer base {
+  :root {
+    --shadow-soft: 0 1px 2px rgba(11, 17, 32, 0.05), 0 4px 16px rgba(11, 17, 32, 0.06);
+    --shadow-soft-lg: 0 2px 4px rgba(11, 17, 32, 0.06), 0 12px 32px rgba(11, 17, 32, 0.1);
+  }
+
+  html {
+    @apply text-ink-900 bg-cream-50 antialiased scroll-smooth;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    @apply leading-relaxed;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Fraunces', Georgia, serif;
+    @apply text-ink-900 font-semibold tracking-tight;
+  }
+  h1 { @apply text-4xl md:text-5xl; }
+  h2 { @apply text-2xl md:text-3xl mt-10 mb-4; }
+  h3 { @apply text-xl md:text-2xl mt-8 mb-3; }
+  a  { @apply text-terracotta-600 underline-offset-4 hover:underline; }
+  ::selection { @apply bg-terracotta-400/30 text-ink-900; }
+  img { @apply select-none; }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-terracotta-500 ring-offset-2 ring-offset-cream-50 rounded-md;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100]
+           focus:inline-flex focus:items-center focus:px-4 focus:py-2.5
+           focus:bg-ink-900 focus:text-cream-50 focus:rounded-lg focus:shadow-soft-lg
+           focus:font-semibold focus:text-sm focus:no-underline;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center rounded-full px-7 py-3
+           font-semibold text-base border border-transparent
+           transition-colors duration-200 ease-out cursor-pointer;
+  }
+  .btn-primary {
+    @apply btn bg-terracotta-500 text-white shadow-soft
+           hover:bg-terracotta-600 hover:shadow-soft-lg
+           focus-visible:ring-terracotta-500;
+  }
+  .btn-secondary {
+    @apply btn bg-white/10 text-cream-50 border border-cream-50/35
+           hover:bg-cream-50 hover:text-ink-900 hover:border-cream-50
+           focus-visible:ring-cream-50;
+  }
+  .btn-secondary-light {
+    @apply btn bg-white text-ink-900 border border-cream-200 shadow-soft
+           hover:border-terracotta-400 hover:text-terracotta-600
+           focus-visible:ring-terracotta-500;
+  }
+  .btn-nav-cta {
+    @apply hidden md:inline-flex items-center justify-center rounded-full px-5 py-2.5
+           text-sm font-semibold bg-terracotta-500 text-white no-underline
+           hover:bg-terracotta-600 transition-colors duration-200 cursor-pointer
+           focus-visible:ring-2 focus-visible:ring-terracotta-500 focus-visible:ring-offset-2;
+  }
+
+  .section-eyebrow {
+    @apply font-mono text-[11px] tracking-[0.18em] uppercase text-terracotta-600 font-medium;
+  }
+
+  .hero-band {
+    @apply relative bg-ink-900 text-cream-50 overflow-hidden;
+  }
+  .hero-band a:not(.btn-primary):not(.btn-secondary):not(.btn-secondary-light) {
+    @apply text-cream-50/90 hover:text-white;
+  }
+
+  .trust-badge {
+    @apply inline-flex items-center gap-2 rounded-full border border-cream-200
+           bg-white px-3 py-1.5 text-xs font-medium text-ink-700;
+  }
+
+  .stat-card {
+    @apply bg-white border border-cream-200 rounded-2xl p-8 text-center
+           shadow-soft transition-colors duration-200 cursor-default
+           hover:border-terracotta-400/50 hover:shadow-soft-lg;
+  }
+
+  .container-prose {
+    @apply max-w-prose mx-auto px-5;
+  }
+
+  .card-soft {
+    @apply bg-white rounded-3xl border border-cream-200/70 shadow-soft
+           transition-all duration-300 ease-out
+           hover:shadow-soft-lg hover:-translate-y-1;
+  }
+
+  .input-soft {
+    @apply w-full px-5 py-3 rounded-full border border-cream-200 bg-white
+           shadow-soft placeholder:text-ink-500/70
+           focus:outline-none focus:ring-2 focus:ring-terracotta-400 focus:border-transparent
+           transition-all duration-200;
+  }
+
+  .img-soft {
+    @apply rounded-3xl overflow-hidden bg-cream-200;
+  }
+
+  .amazon-cta-inline {
+    @apply inline-flex items-center gap-1 ml-2 px-3 py-1 rounded-full
+           bg-terracotta-500 text-white text-sm font-medium no-underline
+           shadow-soft align-middle
+           hover:bg-terracotta-600 hover:shadow-soft-lg hover:no-underline
+           transition-all duration-200;
+  }
+  .amazon-cta-inline:hover { text-decoration: none !important; }
+
+  .product-link-pair {
+    @apply inline-flex flex-wrap items-center gap-y-1;
+  }
+
+  .texture-paper {
+    background-image:
+      radial-gradient(rgba(42, 36, 34, 0.025) 1px, transparent 1px),
+      radial-gradient(rgba(42, 36, 34, 0.02) 1px, transparent 1px);
+    background-size: 4px 4px, 7px 7px;
+    background-position: 0 0, 2px 2px;
+  }
+
+  .section-pebble {
+    @apply relative rounded-[2.5rem] md:rounded-[3rem] mx-3 md:mx-6 my-3 md:my-6
+           overflow-hidden;
+  }
+
+  .section-soft {
+    @apply relative;
+  }
+  .section-soft::before,
+  .section-soft::after {
+    content: '';
+    @apply absolute left-0 right-0 h-12 md:h-20 pointer-events-none;
+    background: inherit;
+  }
+  .section-soft::before {
+    @apply -top-6 md:-top-10 rounded-b-[3rem] md:rounded-b-[4rem];
+  }
+  .section-soft::after {
+    @apply -bottom-6 md:-bottom-10 rounded-t-[3rem] md:rounded-t-[4rem];
+  }
+}
+
+@layer utilities {
+  .shadow-soft {
+    box-shadow: var(--shadow-soft, 0 1px 2px rgba(42, 36, 34, 0.04), 0 4px 16px rgba(42, 36, 34, 0.05));
+  }
+  .shadow-soft-lg {
+    box-shadow: var(--shadow-soft-lg, 0 2px 4px rgba(42, 36, 34, 0.05), 0 12px 32px rgba(42, 36, 34, 0.09));
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .rounded-blob {
+    border-radius: 2.5rem 2.5rem 3.5rem 3.5rem / 2rem 2rem 3rem 3rem;
+  }
+}

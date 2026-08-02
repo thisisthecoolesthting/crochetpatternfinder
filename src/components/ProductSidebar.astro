@@ -1,0 +1,49 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { amazonAffiliateUrl } from '@/utils/related-products';
+
+interface Props {
+  products: CollectionEntry<'products'>[];
+  associateTag?: string;
+  heading?: string;
+}
+
+const associateTag = Astro.props.associateTag ?? import.meta.env.PUBLIC_ASSOCIATE_TAG ?? 'crochetpatternfinder-20';
+const { products, heading = 'Top Picks' } = Astro.props;
+const picks = products.filter((p) => p.data.asin && !p.data.imageFlagged).slice(0, 5);
+if (picks.length === 0) return;
+---
+
+<aside class="case-ad-slot sticky top-4 mb-6 rounded-2xl border border-cream-200/60 bg-cream-50 p-4 text-sm not-prose">
+  <p class="font-mono text-[10px] tracking-[0.14em] uppercase text-terracotta-600 mb-3">{heading}</p>
+  <ul class="space-y-4 list-none p-0 m-0">
+    {picks.map((p) => {
+      const asin = String(p.data.asin).toUpperCase();
+      const href = amazonAffiliateUrl(p, associateTag);
+      const label = p.data.cardTitle || p.data.title;
+      return (
+        <li class="flex flex-col items-center gap-2">
+          <a href={href} rel="sponsored nofollow" target="_blank" class="block w-full text-center no-underline">
+            {p.data.imageUrl ? (
+              <img
+                src={p.data.imageUrl}
+                alt={label}
+                width="120"
+                height="120"
+                loading="lazy"
+                class="mx-auto object-contain max-h-[120px] rounded-lg"
+              />
+            ) : null}
+            <span class="block mt-1 text-xs text-ink-800 font-medium leading-snug line-clamp-2">{label}</span>
+            <span class="mt-2 inline-block w-full rounded-full bg-terracotta-500 hover:bg-terracotta-600 text-cream-50 text-[11px] font-mono tracking-wide py-1.5 transition-colors">
+              Check Price →
+            </span>
+          </a>
+        </li>
+      );
+    })}
+  </ul>
+  <p class="mt-4 text-[10px] text-ink-400 leading-snug">
+    As an Amazon Associate I earn from qualifying purchases.
+  </p>
+</aside>

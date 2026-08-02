@@ -1,0 +1,41 @@
+---
+import home from '@/data/spawn-home.json';
+/**
+ * Buttondown (or none) — posts to public Buttondown form URL when configured.
+ */
+export interface Props {
+  title?: string;
+  subtitle?: string;
+}
+const dist = (home as {
+  distribution?: { email_capture?: { provider?: string; form_action?: string; list_id?: string } };
+}).distribution;
+const ec = dist?.email_capture;
+const show = ec?.provider === 'buttondown' && typeof ec?.form_action === 'string' && ec.form_action.startsWith('http');
+const { title = 'Get the newsletter', subtitle = 'One email, no spam.' } = Astro.props;
+---
+{show ? (
+  <div class="mt-10 rounded-3xl border border-ink-200/30 bg-ink-50/30 p-6 md:p-8">
+    <h2 class="font-display text-2xl text-ink-900 mb-2">{title}</h2>
+    <p class="text-ink-700 mb-4">{subtitle}</p>
+    <form method="post" action={ec?.form_action} class="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <label class="flex-1">
+        <span class="sr-only">Email</span>
+        <input
+          type="email"
+          name="email"
+          required
+          class="w-full rounded-2xl border border-ink-200 px-4 py-3 text-ink-900"
+          placeholder="you@example.com"
+        />
+      </label>
+      <input type="hidden" name="tag" value={ec?.list_id ?? ''} />
+      <button
+        type="submit"
+        class="rounded-2xl bg-terracotta-600 px-6 py-3 text-white font-medium hover:bg-terracotta-700"
+      >
+        Subscribe
+      </button>
+    </form>
+  </div>
+) : null}

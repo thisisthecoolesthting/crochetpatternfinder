@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://crochetpatternfinder.org/sitemap.xml

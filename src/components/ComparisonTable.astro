@@ -1,0 +1,82 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { amazonAffiliateUrl } from '@/utils/related-products';
+
+export interface Props {
+  products: CollectionEntry<'products'>[];
+  caption?: string;
+}
+
+const { products, caption } = Astro.props;
+if (!products?.length) return;
+
+const associateTag = import.meta.env.PUBLIC_ASSOCIATE_TAG ?? 'crochetpatternfinder-20';
+---
+
+<div class="my-8 not-prose overflow-x-auto rounded-xl border border-cream-200 shadow-soft">
+  <table class="w-full text-sm border-collapse min-w-[520px]">
+    {caption && (
+      <caption class="text-left px-4 py-2.5 font-mono text-[10.5px] tracking-[0.14em]
+                      uppercase text-terracotta-600 border-b border-cream-200 bg-cream-50">
+        {caption}
+      </caption>
+    )}
+    <thead>
+      <tr class="bg-cream-100 text-left">
+        {['Product', 'Best for', 'Price', 'Rating', 'Buy'].map((h) => (
+          <th class="px-4 py-3 font-mono text-[10.5px] tracking-[0.1em] uppercase text-ink-700 whitespace-nowrap">
+            {h}
+          </th>
+        ))}
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-cream-200">
+      {products.map((p, i) => {
+        const d = p.data as any;
+        const href = amazonAffiliateUrl(p, associateTag);
+        const title =
+          d.cardTitle?.trim() ||
+          (d.title?.length > 40 ? d.title.slice(0, 37) + '…' : d.title);
+        return (
+          <tr class={i % 2 === 0 ? 'bg-white' : 'bg-cream-50/60'}>
+            <td class={`px-4 py-3 sticky left-0 ${i % 2 === 0 ? 'bg-white' : 'bg-cream-50/60'}`}>
+              <div class="flex items-center gap-2.5">
+                {d.imageUrl && (
+                  <img
+                    src={d.imageUrl}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    class="w-10 h-10 object-contain rounded-lg bg-cream-100 p-0.5 flex-shrink-0"
+                  />
+                )}
+                <span class="text-xs font-medium text-ink-900 leading-snug">{title}</span>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-xs text-ink-700 italic max-w-[160px] leading-snug">
+              {d.cardPick || '—'}
+            </td>
+            <td class="px-4 py-3 text-sm font-semibold text-ink-900 whitespace-nowrap">
+              {d.price ? `$${(d.price as number).toFixed(2)}` : '—'}
+            </td>
+            <td class="px-4 py-3 text-sm text-ink-700 whitespace-nowrap">
+              {d.rating ? `★ ${(d.rating as number).toFixed(1)}` : '—'}
+            </td>
+            <td class="px-4 py-3">
+              <a
+                href={href}
+                target="_blank"
+                rel="nofollow noopener sponsored"
+                class="inline-block bg-terracotta-500 hover:bg-terracotta-600 text-cream-50
+                       font-mono text-[10px] tracking-[0.1em] uppercase px-3 py-1.5
+                       rounded-full transition-colors no-underline whitespace-nowrap"
+              >
+                Amazon ↗
+              </a>
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+</div>

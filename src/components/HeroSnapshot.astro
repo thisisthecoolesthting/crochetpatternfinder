@@ -1,0 +1,112 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+export interface Props {
+  stats: { num: string; label: string; sub?: string }[];
+  products: CollectionEntry<'products'>[];
+  articleCount: number;
+  panelLabel?: string;
+  panelAriaLabel?: string;
+  trackedSuffix?: string;
+  footerNote?: string;
+  footerHref?: string;
+  footerLinkText?: string;
+  productPlaceholder?: string;
+}
+
+const {
+  stats,
+  products,
+  articleCount,
+  panelLabel = 'Live watchlist',
+  panelAriaLabel = 'Editorial snapshot panel',
+  trackedSuffix = 'articles tracked',
+  footerNote = 'Updated weekly · independent editorial · no pay-to-play',
+  footerHref = '/pillars',
+  footerLinkText = 'See all guides →',
+  productPlaceholder = 'Pick',
+} = Astro.props;
+
+function shortTitle(title: string, max = 42): string {
+  if (title.length <= max) return title;
+  const slice = title.slice(0, max);
+  const cut = slice.lastIndexOf(' ');
+  return `${(cut > 20 ? slice.slice(0, cut) : slice).trim()}…`;
+}
+---
+
+<aside
+  class="rounded-2xl border border-cream-50/15 bg-ink-900/60 backdrop-blur-sm overflow-hidden shadow-soft-lg"
+  aria-label={panelAriaLabel}
+>
+  <div class="px-4 py-3 border-b border-cream-50/10 flex items-center justify-between gap-2">
+    <p class="font-mono text-[10px] tracking-[0.16em] uppercase text-terracotta-400">
+      {panelLabel}
+    </p>
+    <span class="text-[10px] font-mono text-cream-50/60 uppercase tracking-wide">
+      {articleCount}+ {trackedSuffix}
+    </span>
+  </div>
+
+  <div class="grid grid-cols-3 divide-x divide-cream-50/10 border-b border-cream-50/10">
+    {stats.map((stat) => (
+      <div class="px-3 py-4 text-center">
+        <p class="font-display text-2xl md:text-3xl text-cream-50 leading-none">{stat.num}</p>
+        <p class="font-mono text-[9px] md:text-[10px] tracking-[0.12em] uppercase text-terracotta-400 mt-2 leading-tight">
+          {stat.label}
+        </p>
+      </div>
+    ))}
+  </div>
+
+  {products.length > 0 && (
+    <ul class="divide-y divide-cream-50/10" role="list">
+      {products.map((p, i) => {
+        const d = p.data;
+        const badges = ['Top pick', 'Best value', 'Editors\' choice'];
+        return (
+          <li>
+            <a
+              href={`/products/${p.slug}`}
+              class="flex items-center gap-3 px-4 py-3 no-underline hover:bg-white/5 transition-colors duration-200 cursor-pointer group"
+            >
+              <div class="w-14 h-14 rounded-lg bg-white shrink-0 overflow-hidden flex items-center justify-center p-1">
+                {d.imageUrl ? (
+                  <img src={d.imageUrl} alt="" class="max-w-full max-h-full object-contain" loading="eager" />
+                ) : (
+                  <span class="text-ink-500 text-xs">{productPlaceholder}</span>
+                )}
+              </div>
+              <div class="min-w-0 flex-1">
+                <span class="inline-block font-mono text-[9px] tracking-[0.12em] uppercase text-terracotta-400 mb-0.5">
+                  {badges[i] || 'Tracked'}
+                </span>
+                <p class="text-sm text-cream-50 font-medium leading-snug group-hover:text-terracotta-400 transition-colors">
+                  {shortTitle(d.cardTitle || d.title)}
+                </p>
+                {typeof d.price === 'number' && d.price > 0 && (
+                  <p class="text-xs text-cream-50/60 mt-0.5">
+                    ${d.price.toFixed(2)}
+                    {d.cardPick ? ` · ${d.cardPick}` : ''}
+                  </p>
+                )}
+              </div>
+              <svg class="w-4 h-4 text-cream-50/40 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  )}
+
+  <div class="px-4 py-3 bg-sage-600/25 flex flex-wrap gap-2 justify-between items-center">
+    <p class="text-xs text-cream-50/75 max-w-[18rem] leading-snug">
+      {footerNote}
+    </p>
+    <a href={footerHref} class="text-xs font-semibold text-terracotta-400 hover:text-terracotta-300 no-underline whitespace-nowrap cursor-pointer">
+      {footerLinkText}
+    </a>
+  </div>
+</aside>

@@ -1,0 +1,245 @@
+---
+// /find — Free Crochet Pattern Search
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import home from '@/data/spawn-home.json';
+const b = home.brand;
+const id = b.identity;
+---
+<BaseLayout
+  title="Free Crochet Pattern Finder — Search 1,000s of Free Patterns"
+  description="Search thousands of free crochet patterns by category: amigurumi, blankets, hats, scarves, baby and more. Updated daily from the best free crochet sites."
+  canonicalUrl={`${id.siteUrl}/find`}
+>
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+
+    <!-- Hero -->
+    <div class="text-center mb-10">
+      <h1 class="font-display text-3xl sm:text-4xl font-bold text-ink-900 mb-3">
+        Free Crochet Pattern Finder
+      </h1>
+      <p class="text-ink-600 text-lg max-w-xl mx-auto">
+        Search thousands of free patterns from AllFreeCrochet, Yarnspirations, Moogly and more — all in one place.
+      </p>
+      <div id="stats-badge" class="mt-3 text-sm text-terracotta-600 font-semibold hidden">
+      </div>
+    </div>
+
+    <!-- Search bar -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-6 max-w-2xl mx-auto">
+      <input
+        id="search-input"
+        type="search"
+        placeholder="Search patterns… e.g. baby blanket, granny square, amigurumi cat"
+        class="flex-1 rounded-xl border border-gray-200 px-4 py-3 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white shadow-sm"
+        autocomplete="off"
+      />
+      <button
+        id="search-btn"
+        class="rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 transition-colors shadow-sm"
+      >
+        Search
+      </button>
+    </div>
+
+    <!-- Category chips -->
+    <div class="flex flex-wrap gap-2 justify-center mb-5" id="cat-chips">
+      <button data-cat="" class="cat-chip rounded-full border border-orange-500 bg-orange-500 text-white text-sm px-4 py-1.5 font-medium cursor-pointer transition-colors">All</button>
+      <button data-cat="Amigurumi" class="cat-chip rounded-full border border-gray-200 bg-white text-gray-600 text-sm px-4 py-1.5 font-medium cursor-pointer hover:border-orange-400 hover:text-orange-600 transition-colors">Amigurumi</button>
+      <button data-cat="Blankets" class="cat-chip rounded-full border border-gray-200 bg-white text-gray-600 text-sm px-4 py-1.5 font-medium cursor-pointer hover:border-orange-400 hover:text-orange-600 transition-colors">Blankets</button>
+      <button data-cat="Hats" class="cat-chip rounded-full border border-gray-200 bg-white text-gray-600 text-sm px-4 py-1.5 font-medium cursor-pointer hover:border-orange-400 hover:text-orange-600 transition-colors">Hats</button>
+      <button data-cat="Scarves" class="cat-chip rounded-full border border-gray-200 bg-white text-gray-600 text-sm px-4 py-1.5 font-medium cursor-pointer hover:border-orange-400 hover:text-orange-600 transition-colors">Scarves</button>
+      <button data-cat="Baby" class="cat-chip rounded-full border border-gray-200 bg-white text-gray-600 text-sm px-4 py-1.5 font-medium cursor-pointer hover:border-orange-400 hover:text-orange-600 transition-colors">Baby</button>
+      <button data-cat="Bags" class="cat-chip rounded-full border border-gray-200 bg-white text-gray-600 text-sm px-4 py-1.5 font-medium cursor-pointer hover:border-orange-400 hover:text-orange-600 transition-colors">Bags</button>
+      <button data-cat="General" class="cat-chip rounded-full border border-gray-200 bg-white text-gray-600 text-sm px-4 py-1.5 font-medium cursor-pointer hover:border-orange-400 hover:text-orange-600 transition-colors">General</button>
+    </div>
+
+    <!-- Source filter -->
+    <div class="flex flex-wrap gap-2 justify-center mb-8" id="src-chips">
+      <button data-src="" class="src-chip rounded-full border border-orange-300 bg-orange-50 text-orange-700 text-xs px-3 py-1 font-medium cursor-pointer transition-colors">All Sources</button>
+      <button data-src="AllFreeCrochet" class="src-chip rounded-full border border-gray-200 bg-white text-gray-500 text-xs px-3 py-1 font-medium cursor-pointer hover:border-orange-300 transition-colors">AllFreeCrochet</button>
+      <button data-src="Yarnspirations" class="src-chip rounded-full border border-gray-200 bg-white text-gray-500 text-xs px-3 py-1 font-medium cursor-pointer hover:border-orange-300 transition-colors">Yarnspirations</button>
+      <button data-src="Moogly" class="src-chip rounded-full border border-gray-200 bg-white text-gray-500 text-xs px-3 py-1 font-medium cursor-pointer hover:border-orange-300 transition-colors">Moogly</button>
+    </div>
+
+    <!-- Results count -->
+    <p id="result-count" class="text-sm text-gray-500 mb-4 text-center"></p>
+
+    <!-- Grid -->
+    <div id="pattern-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 mb-10">
+    </div>
+
+    <!-- Loading state -->
+    <div id="loading" class="text-center py-16 text-gray-400 hidden">
+      <div class="inline-block w-8 h-8 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mb-3"></div>
+      <p>Finding patterns&hellip;</p>
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty" class="text-center py-16 text-gray-400 hidden">
+      <p class="text-3xl mb-2">&#x1F9F6;</p>
+      <p class="font-medium">No patterns found for that search.</p>
+      <p class="text-sm mt-1">Try a different keyword or category.</p>
+    </div>
+
+    <!-- Load more -->
+    <div class="text-center mb-16">
+      <button id="load-more" class="hidden rounded-xl border-2 border-orange-400 text-orange-600 hover:bg-orange-50 font-semibold px-8 py-3 transition-colors">
+        Load more patterns
+      </button>
+    </div>
+
+  </main>
+</BaseLayout>
+
+<script>
+  const API = '/api';
+  let currentQ = '';
+  let currentCat = '';
+  let currentSrc = '';
+  let currentOffset = 0;
+  const PAGE_SIZE = 24;
+
+  async function fetchPatterns(q, cat, src, offset) {
+    const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) });
+    if (q) params.set('q', q);
+    if (cat) params.set('category', cat);
+    if (src) params.set('source', src);
+    const res = await fetch(API + '/search?' + params.toString());
+    return res.json();
+  }
+
+  function patternCard(p) {
+    const imgHtml = p.image_url
+      ? '<img src="' + p.image_url + '" alt="" loading="lazy" style="width:100%;height:160px;object-fit:cover;background:#f5f0e8;" onerror="this.parentElement.style.display=\'none\'">'
+      : '<div style="width:100%;height:160px;background:#f5f0e8;display:flex;align-items:center;justify-content:center;font-size:2.5rem;">&#x1F9F6;</div>';
+    const catBadge = (p.category && p.category !== 'General') ? ' &middot; ' + p.category : '';
+    const diff = p.difficulty ? '<span style="font-size:0.75rem;color:#e07a4f;">' + p.difficulty + '</span>' : '';
+    return (
+      '<a href="' + p.source_url + '" target="_blank" rel="noopener noreferrer" '
+      + 'style="display:flex;flex-direction:column;background:white;border-radius:1rem;'
+      + 'border:1px solid #eee;overflow:hidden;text-decoration:none;'
+      + 'box-shadow:0 1px 3px rgba(0,0,0,.07);transition:box-shadow .15s;" '
+      + 'onmouseover="this.style.boxShadow=\'0 4px 12px rgba(0,0,0,.12)\'" '
+      + 'onmouseout="this.style.boxShadow=\'0 1px 3px rgba(0,0,0,.07)\'">'
+      + imgHtml
+      + '<div style="padding:0.75rem;flex:1;display:flex;flex-direction:column;">'
+      + '<h3 style="font-size:0.875rem;font-weight:600;color:#1a1a2e;line-height:1.4;margin:0 0 0.25rem;'
+      + 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">'
+      + p.title + '</h3>'
+      + diff
+      + '<span style="font-size:0.7rem;color:#999;margin-top:auto;padding-top:0.5rem;">'
+      + p.source + catBadge + '</span>'
+      + '</div></a>'
+    );
+  }
+
+  async function render(reset) {
+    if (reset) currentOffset = 0;
+    const grid = document.getElementById('pattern-grid');
+    const loading = document.getElementById('loading');
+    const empty = document.getElementById('empty');
+    const loadMore = document.getElementById('load-more');
+    const countEl = document.getElementById('result-count');
+
+    loading.classList.remove('hidden');
+    if (reset) grid.innerHTML = '';
+    empty.classList.add('hidden');
+    loadMore.classList.add('hidden');
+
+    try {
+      const data = await fetchPatterns(currentQ, currentCat, currentSrc, currentOffset);
+      loading.classList.add('hidden');
+
+      if (data.results.length === 0 && currentOffset === 0) {
+        empty.classList.remove('hidden');
+        countEl.textContent = '';
+        return;
+      }
+
+      grid.insertAdjacentHTML('beforeend', data.results.map(patternCard).join(''));
+      const shown = Math.min(currentOffset + data.results.length, data.total);
+      countEl.textContent = data.total > 0
+        ? 'Showing ' + shown.toLocaleString() + ' of ' + data.total.toLocaleString() + ' patterns'
+        : '';
+
+      currentOffset += data.results.length;
+      if (currentOffset < data.total) {
+        loadMore.classList.remove('hidden');
+      }
+    } catch(err) {
+      loading.classList.add('hidden');
+      empty.classList.remove('hidden');
+    }
+  }
+
+  async function loadStats() {
+    try {
+      const data = await fetch(API + '/stats').then(function(r) { return r.json(); });
+      const badge = document.getElementById('stats-badge');
+      if (data.total > 0) {
+        badge.textContent = data.total.toLocaleString() + ' free patterns indexed';
+        badge.classList.remove('hidden');
+      }
+    } catch(e) {}
+  }
+
+  // Category chips
+  document.getElementById('cat-chips').addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-cat]');
+    if (!btn) return;
+    document.querySelectorAll('.cat-chip').forEach(function(b) {
+      b.style.background = 'white';
+      b.style.color = '#4b5563';
+      b.style.borderColor = '#e5e7eb';
+    });
+    btn.style.background = '#f97316';
+    btn.style.color = 'white';
+    btn.style.borderColor = '#f97316';
+    currentCat = btn.getAttribute('data-cat');
+    render(true);
+  });
+
+  // Source chips
+  document.getElementById('src-chips').addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-src]');
+    if (!btn) return;
+    document.querySelectorAll('.src-chip').forEach(function(b) {
+      b.style.background = 'white';
+      b.style.color = '#6b7280';
+      b.style.borderColor = '#e5e7eb';
+    });
+    btn.style.background = '#fff7ed';
+    btn.style.color = '#c2410c';
+    btn.style.borderColor = '#fed7aa';
+    currentSrc = btn.getAttribute('data-src');
+    render(true);
+  });
+
+  // Search
+  let debounceTimer;
+  document.getElementById('search-input').addEventListener('input', function(e) {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function() {
+      currentQ = e.target.value.trim();
+      render(true);
+    }, 350);
+  });
+
+  document.getElementById('search-btn').addEventListener('click', function() {
+    currentQ = document.getElementById('search-input').value.trim();
+    render(true);
+  });
+
+  document.getElementById('search-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      clearTimeout(debounceTimer);
+      currentQ = e.target.value.trim();
+      render(true);
+    }
+  });
+
+  document.getElementById('load-more').addEventListener('click', function() { render(false); });
+
+  loadStats();
+  render(true);
+</script>

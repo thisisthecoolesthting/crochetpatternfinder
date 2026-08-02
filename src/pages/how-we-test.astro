@@ -1,0 +1,47 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import HowWeTest from '@/components/HowWeTest.astro';
+import home from '@/data/spawn-home.json';
+
+const b = home.brand;
+// Methodology bullets live on spawn-home (sourced from niche-spec editorial.methodology)
+// when present; spawn_site falls back to an empty array, in which case HowWeTest
+// renders a "configure in niche spec" hint.
+const methodology: string[] =
+  (home as { editorial?: { methodology?: string[] } }).editorial?.methodology ?? [];
+---
+
+<BaseLayout
+  title={`How we test — ${b.fullName}`}
+  description={`The methodology behind every ${b.fullName} review and recommendation.`}
+  ogType="article"
+>
+  <main class="container-prose py-12 md:py-16">
+    <header class="mb-8">
+      <p class="text-terracotta-600 text-xs uppercase tracking-[0.2em] font-semibold mb-2">
+        Editorial standards
+      </p>
+      <h1 class="font-display text-3xl md:text-4xl text-ink-900 !mt-0 mb-3">
+        How we test at {b.fullName}
+      </h1>
+      <p class="text-ink-700 leading-relaxed max-w-prose">
+        Every product, pattern, or pick on this site goes through the same review
+        process. We disclose what we paid, how long we tested, and what bias we tried
+        to remove. If a step in this list does not match what you are reading, that is
+        a bug &mdash; tell us and we will fix it or pull the post.
+      </p>
+    </header>
+
+    <HowWeTest methodology={methodology} />
+
+    <section class="prose prose-ink max-w-none mt-12">
+      <h2>Affiliate disclosure</h2>
+      <p>
+        We earn a commission on some of the products linked from this site. That
+        commission never changes which products we recommend or how we score them.
+        See the <a href="/disclosure/">full affiliate disclosure</a> for the
+        unabridged version.
+      </p>
+    </section>
+  </main>
+</BaseLayout>

@@ -1,0 +1,54 @@
+---
+// Compact author byline for article, pillar, and product pages.
+// Renders avatar + name (linked) + role + published date + optional "Last reviewed" date.
+//
+// Usage:
+//   <AuthorByline authorSlug={entry.data.author} publishedAt={entry.data.publishedAt} reviewedAt={entry.data.reviewedAt} />
+
+import { getEntry } from 'astro:content';
+
+export interface Props {
+  authorSlug: string;
+  publishedAt: Date | string;
+  reviewedAt?: Date | string;
+}
+
+const { authorSlug, publishedAt, reviewedAt } = Astro.props;
+
+const author = await getEntry('authors', authorSlug);
+if (!author) {
+  throw new Error(`Author not found: ${authorSlug}`);
+}
+
+const pubDate = new Date(publishedAt);
+const revDate = reviewedAt ? new Date(reviewedAt) : null;
+const fmt = (d: Date) =>
+  d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<div class="flex items-center gap-4 py-5 border-y border-cream-200/70 my-6">
+  <a href={`/authors/${author.slug}/`} class="block shrink-0 no-underline">
+    <img
+      src={author.data.photoUrl}
+      alt={author.data.name}
+      loading="lazy"
+      width="56"
+      height="56"
+      class="w-14 h-14 rounded-full object-cover ring-2 ring-cream-200/80 !my-0"
+    />
+  </a>
+  <div class="flex-1 min-w-0 leading-snug">
+    <p class="text-sm text-ink-900 !mt-0 !mb-0.5">
+      By
+      <a
+        href={`/authors/${author.slug}/`}
+        class="font-semibold text-ink-900 hover:text-terracotta-600 transition-colors no-underline"
+      >{author.data.name}</a>
+      <span class="text-ink-500 font-normal"> &middot; {author.data.role}</span>
+    </p>
+    <p class="text-xs text-ink-500 !mt-0">
+      Published {fmt(pubDate)}
+      {revDate && <> &middot; Last reviewed {fmt(revDate)}</>}
+    </p>
+  </div>
+</div>

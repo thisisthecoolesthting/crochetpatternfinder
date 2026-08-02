@@ -1,0 +1,35 @@
+---
+import TrustIndicators from '@/components/TrustIndicators.astro';
+import type { TrustItem } from '@/components/TrustIndicators.astro';
+
+export interface Props {
+  trustLine: string;
+  items?: TrustItem[];
+  methodologyHref?: string;
+  methodologyLabel?: string;
+}
+
+const {
+  trustLine,
+  items,
+  methodologyHref = '/methodology/',
+  methodologyLabel = 'How we work →',
+} = Astro.props;
+---
+
+<section class="border-y border-cream-200 bg-white" aria-labelledby="trust-strip-heading">
+  <div class="max-w-site mx-auto px-4 sm:px-5 py-5 md:py-6">
+    <div class="mb-4">
+      <TrustIndicators items={items} />
+    </div>
+    <div class="grid md:grid-cols-[auto_1fr_auto] gap-4 md:gap-8 items-center">
+      <p id="trust-strip-heading" class="section-eyebrow whitespace-nowrap">Editorial standards</p>
+      <blockquote class="font-display italic text-base md:text-lg text-ink-700 leading-snug border-0 m-0 p-0">
+        "{trustLine}"
+      </blockquote>
+      <a href={methodologyHref} class="font-mono text-[11.5px] tracking-[0.08em] uppercase text-ink-900 border-b-2 border-terracotta-500 pb-0.5 whitespace-nowrap no-underline hover:text-terracotta-600 cursor-pointer">
+        {methodologyLabel}
+      </a>
+    </div>
+  </div>
+</section>

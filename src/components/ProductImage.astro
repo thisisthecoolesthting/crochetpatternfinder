@@ -1,0 +1,45 @@
+---
+import path from 'node:path';
+import { FALLBACK_SVG, resolveProductImageSources } from '@/utils/product-image';
+
+export interface Props {
+  slug: string;
+  asin: string;
+  imageUrl?: string | null;
+  alt: string;
+  class?: string;
+  loading?: 'eager' | 'lazy';
+  containerClass?: string;
+}
+
+const {
+  slug,
+  asin,
+  imageUrl,
+  alt,
+  class: imgClass = 'max-h-72 w-full object-contain',
+  loading = 'lazy',
+  containerClass = '',
+} = Astro.props;
+
+const publicRoot = path.join(process.cwd(), 'public');
+const { primary, fallbacks } = await resolveProductImageSources(
+  slug,
+  asin,
+  imageUrl,
+  publicRoot,
+);
+const fallbackPayload = fallbacks.join('\u001f');
+---
+
+<img
+  src={primary}
+  alt={alt}
+  loading={loading}
+  decoding="async"
+  referrerpolicy="no-referrer"
+  class:list={[imgClass, containerClass]}
+  data-fallbacks={fallbackPayload}
+  data-fallback-svg={FALLBACK_SVG}
+  onerror="(function(img){img.onerror=null;var q=img.getAttribute('data-fallbacks')||'';var n=q.split('\u001f').filter(Boolean);if(n.length){img.src=n.shift();img.setAttribute('data-fallbacks',n.join('\u001f'));return;}img.src=img.getAttribute('data-fallback-svg')||'';})(this)"
+/>

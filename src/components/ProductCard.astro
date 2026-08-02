@@ -1,0 +1,100 @@
+---
+// Compact product card for listing pages and "related picks" sections.
+// Uses the card-level display contract: short human title (data.cardTitle or
+// trimmed fallback), one-line "why we picked it" (data.cardPick), consistent
+// square aspect on cream bg, always-show rating + review count when present.
+// Broken image URLs fall back to a neutral placeholder (onerror handler).
+
+import type { CollectionEntry } from 'astro:content';
+import { amazonAffiliateUrl } from '@/utils/related-products';
+
+export interface Props {
+  product: CollectionEntry<'products'>;
+}
+
+const { product } = Astro.props;
+const { data } = product as any;
+const associateTag = import.meta.env.PUBLIC_ASSOCIATE_TAG ?? 'crochetpatternfinder-20';
+const affiliateHref = amazonAffiliateUrl(product, associateTag);
+const url = `/products/${product.slug}`;
+
+// Prefer hand-curated short title; fall back to word-boundary trim of raw title.
+// Never truncate mid-word — cut at the last space before the limit.
+const rawTitle = data.title || '';
+function wordTrim(src: string, max: number): string {
+  if (src.length <= max) return src;
+  const slice = src.slice(0, max);
+  const lastSpace = slice.lastIndexOf(' ');
+  const base = lastSpace > 20 ? slice.slice(0, lastSpace) : slice;
+  return base.replace(/[,\-\s]+$/, '') + '…';
+}
+const shortTitle = (data.cardTitle && data.cardTitle.trim())
+  ? data.cardTitle.trim()
+  : wordTrim(rawTitle, 52);
+
+// One-line "Why we picked it" — optional, hand-curated per product.
+const pickLine = (data.cardPick && data.cardPick.trim()) ? data.cardPick.trim() : '';
+
+// Inline SVG placeholder — shown when imageUrl is missing or fails to load.
+// Neutral cream background, subtle icon — no raw alt text ever renders.
+const FALLBACK_SVG =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'>` +
+    `<rect width='120' height='120' fill='#F5EFE6'/>` +
+    `<g fill='none' stroke='#C8B6A0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'>` +
+    `<rect x='28' y='34' width='64' height='52' rx='6'/>` +
+    `<circle cx='46' cy='52' r='5'/>` +
+    `<path d='m34 78 16-16 14 12 10-8 12 14'/>` +
+    `</g></svg>`
+  );
+---
+<a
+  href={affiliateHref}
+  target="_blank"
+  rel="nofollow noopener sponsored"
+  class="group block rounded-3xl border border-cream-200/70 bg-white shadow-soft
+         hover:shadow-soft-lg hover:-translate-y-1
+         transition-all duration-300 ease-out no-underline overflow-hidden"
+>
+  <div class="aspect-square bg-cream-100 flex items-center justify-center overflow-hidden">
+    <img
+      src={data.imageUrl || FALLBACK_SVG}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      onerror={`this.onerror=null;this.src='${FALLBACK_SVG}';this.classList.add('p-8');`}
+      class="w-full h-full object-contain p-5 group-hover:scale-[1.04] transition-transform duration-500 ease-out"
+    />
+  </div>
+  <div class="p-5 space-y-1.5">
+    <h3 class="text-base font-semibold text-ink-900 leading-snug !mt-0 group-hover:text-terracotta-600 transition-colors duration-200">
+      {shortTitle}
+    </h3>
+    {pickLine && (
+      <p class="text-xs text-ink-500 leading-snug italic">
+        {pickLine}
+      </p>
+    )}
+    {(data.price || data.rating) && (
+      <div class="flex items-center justify-between text-sm text-ink-700 pt-1">
+        {data.price ? (
+          <span class="font-semibold">${data.price.toFixed(2)}</span>
+        ) : <span />}
+        {data.rating && (
+          <span class="text-ink-500">
+            &#9733; {data.rating.toFixed(1)}
+            {data.reviewCount ? ` · ${data.reviewCount.toLocaleString()}` : ''}
+          </span>
+        )}
+      </div>
+    )}
+  </div>
+  <div class="px-5 pb-5 pt-1">
+    <span class="block w-full text-center bg-terracotta-500 hover:bg-terracotta-600
+                 text-cream-50 font-mono text-[11px] tracking-[0.12em] uppercase
+                 px-4 py-2.5 rounded-full transition-colors">
+      View on Amazon ↗
+    </span>
+  </div>
+</a>

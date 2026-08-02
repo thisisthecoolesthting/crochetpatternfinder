@@ -1,0 +1,130 @@
+---
+import home from '@/data/spawn-home.json';
+const hnl = (home as { newsletter?: { kicker?: string; title?: string; subtitle?: string } }).newsletter;
+// Reusable newsletter signup.
+//
+// Detects Beehiiv iframe URL (free tier only gives iframes) and renders
+// the iframe + resize script. For any other URL (ConvertKit, MailerLite)
+// falls back to native form submission.
+//
+// Set PUBLIC_NEWSLETTER_EMBED_URL in .env to activate.
+export interface Props {
+  variant?: 'hero' | 'inline' | 'footer';
+  title?: string;
+  subtitle?: string;
+  cta?: string;
+}
+
+const {
+  variant = 'hero',
+  title = hnl?.title ?? 'Get updates',
+  subtitle = hnl?.subtitle ?? 'A short weekly email with new guides and product notes.',
+  cta = 'Subscribe',
+} = Astro.props;
+const kicker = hnl?.kicker ?? 'Newsletter';
+
+const embedUrl = import.meta.env.PUBLIC_NEWSLETTER_EMBED_URL || '';
+const isBeehiiv = embedUrl.includes('subscribe-forms.beehiiv.com');
+const isNativeForm = embedUrl.startsWith('http') && !isBeehiiv;
+const hasEndpoint = Boolean(embedUrl);
+
+// Iframe sizing per variant (Beehiiv embed.js auto-resizes but needs starting values).
+const iframeHeights: Record<string, string> = {
+  hero:   '520',
+  inline: '420',
+  footer: '340',
+};
+const iframeHeight = iframeHeights[variant] ?? '420';
+---
+
+{variant === 'hero' && (
+  <div class="text-center">
+    <p class="text-terracotta-600 text-xs uppercase tracking-[0.2em] font-semibold mb-4">
+      {kicker}
+    </p>
+    <h2 class="font-display text-3xl md:text-4xl text-ink-900 mb-4">{title}</h2>
+    <p class="text-ink-700 mb-8 max-w-prose mx-auto leading-relaxed">{subtitle}</p>
+
+    {isBeehiiv && (
+      <div class="max-w-xl mx-auto">
+        <iframe
+          src={embedUrl}
+          class="beehiiv-embed w-full"
+          data-test-id="beehiiv-embed"
+          frameborder="0"
+          scrolling="no"
+          style={`height: ${iframeHeight}px; margin: 0; border-radius: 28px; background-color: transparent; box-shadow: 0 2px 4px rgba(42,36,34,0.05), 0 12px 32px rgba(42,36,34,0.08);`}
+        ></iframe>
+      </div>
+    )}
+    {isNativeForm && (
+      <form action={embedUrl} method="post" class="flex flex-col sm:flex-row max-w-md mx-auto gap-3">
+        <input type="email" name="email" required placeholder="you@example.com" class="input-soft flex-1" />
+        <button type="submit" class="btn-primary">{cta}</button>
+      </form>
+    )}
+    {!hasEndpoint && (
+      <p class="text-sm text-ink-500 italic">Newsletter signup coming soon.</p>
+    )}
+  </div>
+)}
+
+{variant === 'inline' && (
+  <aside class="my-10 p-6 md:p-8 bg-cream-100 rounded-[2rem] shadow-soft not-prose relative overflow-hidden">
+    <span aria-hidden="true" class="absolute left-0 top-6 bottom-6 w-1.5 rounded-r-full bg-terracotta-500"></span>
+    <p class="text-terracotta-600 text-xs uppercase tracking-[0.18em] font-semibold mb-2">
+      Stay in the loop
+    </p>
+    <h3 class="font-display text-xl text-ink-900 !mt-0 mb-2">{title}</h3>
+    <p class="text-ink-700 text-sm mb-4 leading-relaxed">{subtitle}</p>
+
+    {isBeehiiv && (
+      <iframe
+        src={embedUrl}
+        class="beehiiv-embed w-full"
+        data-test-id="beehiiv-embed"
+        frameborder="0"
+        scrolling="no"
+        style={`height: ${iframeHeight}px; margin: 0; border-radius: 20px; background-color: transparent;`}
+      ></iframe>
+    )}
+    {isNativeForm && (
+      <form action={embedUrl} method="post" class="flex flex-col sm:flex-row gap-3">
+        <input type="email" name="email" required placeholder="you@example.com" class="input-soft flex-1 text-sm py-2.5" />
+        <button type="submit" class="btn-primary text-sm px-6 py-2.5">{cta}</button>
+      </form>
+    )}
+    {!hasEndpoint && (
+      <p class="text-sm text-ink-500 italic">Newsletter signup coming soon.</p>
+    )}
+  </aside>
+)}
+
+{variant === 'footer' && (
+  <div>
+    <h3 class="font-display text-base text-ink-900 !mt-0 mb-2">{title}</h3>
+    <p class="text-xs text-ink-700 mb-3">{subtitle}</p>
+
+    {isBeehiiv && (
+      <iframe
+        src={embedUrl}
+        class="beehiiv-embed w-full"
+        data-test-id="beehiiv-embed"
+        frameborder="0"
+        scrolling="no"
+        style={`height: ${iframeHeight}px; margin: 0; border-radius: 16px; background-color: transparent;`}
+      ></iframe>
+    )}
+    {isNativeForm && (
+      <form action={embedUrl} method="post" class="flex gap-2">
+        <input type="email" name="email" required placeholder="you@example.com"
+               class="flex-1 min-w-0 px-3 py-2 rounded-full border border-cream-200 bg-white text-xs
+                      focus:outline-none focus:ring-2 focus:ring-terracotta-400 focus:border-transparent" />
+        <button type="submit" class="btn-primary text-xs px-4 py-2">{cta}</button>
+      </form>
+    )}
+    {!hasEndpoint && (
+      <p class="text-xs text-ink-500 italic">Newsletter signup coming soon.</p>
+    )}
+  </div>
+)}

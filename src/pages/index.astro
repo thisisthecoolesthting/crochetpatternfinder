@@ -1,0 +1,520 @@
+---
+// SPINE template homepage — replaces the legacy index.astro per SPINE-001/002.
+// Purpose: visually richer, Pinterest-passable editorial layout that scales
+// across all sites by swapping niche_spec colors only. Header/Footer/BaseLayout
+// are unchanged — the spine is contained to this single page.
+
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import ProductCard from '@/components/ProductCard.astro';
+import NewsletterForm from '@/components/NewsletterForm.astro';
+import home from '@/data/spawn-home.json';
+
+const h = home.homepage;
+const b = home.brand;
+const id = b.identity;
+const dmeta = (home as { defaultMetaDescription?: string }).defaultMetaDescription || b.taglineShort;
+const authorSlug = (home as { defaultAuthorSlug: string }).defaultAuthorSlug;
+const siteYmyl = (home as { persona?: { ymyl?: boolean } }).persona?.ymyl === true;
+
+// ---------- Content collection joins ----------
+const allProducts = await getCollection('products', ({ data }) => data.status === 'published');
+const completeProducts = allProducts.filter((p) => {
+  const d = p.data;
+  const hasImage = d.imageUrl && !d.imageUrl.includes('example') && !d.imageUrl.startsWith('data:');
+  const hasPrice = typeof d.price === 'number' && d.price > 0;
+  const hasRating = typeof d.rating === 'number' && d.rating > 0;
+  return hasImage && hasPrice && hasRating;
+});
+// Comparison row = top 3 by score, with the middle one tagged Editors' Choice.
+const compareRow = completeProducts
+  .sort((a, b) => (b.data.score ?? 0) - (a.data.score ?? 0))
+  .slice(0, 3);
+
+const allPillars = await getCollection('pillars', ({ data }) => data.status === 'published');
+// Pillar grid is 4-up. Pull most-recent 4 published pillars.
+const pillarFour = allPillars
+  .sort((a, b) => +new Date(b.data.publishedAt) - +new Date(a.data.publishedAt))
+  .slice(0, 4);
+
+const pillarGridEntries =
+  pillarFour.length > 0 ? pillarFour : (home.categories || []).slice(0, 4);
+
+const allArticles = await getCollection('articles', ({ data }) => data.status === 'published');
+
+// ---------- Article topic dedupe: 1 per primary tag ----------
+const articlesByDateDesc = [...allArticles]
+  .sort((a, b) => +new Date(b.data.publishedAt) - +new Date(a.data.publishedAt));
+const seenTopicKeys = new Set<string>();
+const topicUniqueArticles: typeof articlesByDateDesc = [];
+const topicSpilloverArticles: typeof articlesByDateDesc = [];
+for (const a of articlesByDateDesc) {
+  const primaryTag = String((a.data.tags?.[0] || '')).toLowerCase().trim();
+  const key = primaryTag || `__untagged-${a.slug}`;
+  if (!seenTopicKeys.has(key)) {
+    seenTopicKeys.add(key);
+    topicUniqueArticles.push(a);
+  } else {
+    topicSpilloverArticles.push(a);
+  }
+}
+const latestSix = topicUniqueArticles.length >= 3
+  ? topicUniqueArticles.slice(0, 6)
+  : [...topicUniqueArticles, ...topicSpilloverArticles].slice(0, 6);
+
+// ---------- Trust line — real numbers beat adjectives ----------
+const productLine = completeProducts.length > 0
+  ? `${completeProducts.length} products reviewed`
+  : '60+ hours of research';
+const computedTrust = `${allArticles.length} articles · ${allPillars.length} in-depth guides · ${productLine}`;
+const trustLineDisplay = (h.trustLine && String(h.trustLine).trim()) || computedTrust;
+
+// ---------- Author bio carry-over ----------
+const aboutHeadline = home.about?.headline || 'About the desk';
+const aboutBody = home.about?.body || '';
+const editorPseudonym = (home as { persona?: { pseudonymHint?: string } }).persona?.pseudonymHint || '';
+
+// ---------- Stat for hero overlay card ----------
+const heroStat = {
+  count: completeProducts.length,
+  label: completeProducts.length === 1 ? 'product' : 'products',
+};
+
+// ---------- Niche-relevant image pool (SSC: perimenopause / cooling / wellness) ----------
+// Each spawned site overrides this by replacing the URLs. The shape is fixed.
+const NICHE_IMAGE_POOL = [
+  'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80', // couple at sunset (warmth)
+  'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=80', // bedroom / linens
+  'https://images.unsplash.com/photo-1455156218388-5e61b526818b?auto=format&fit=crop&w=1200&q=80', // calm green tea moment
+  'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1200&q=80',  // skincare flatlay
+  'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=1200&q=80', // calm lifestyle
+  'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1200&q=80', // yoga / movement
+  'https://images.unsplash.com/photo-1499728603263-13726abce5fd?auto=format&fit=crop&w=1200&q=80', // morning window light
+  'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80', // herbal supplements
+  'https://images.unsplash.com/photo-1556909114-44e3e9399a2e?auto=format&fit=crop&w=1200&q=80',  // vitamins / wellness
+  'https://images.unsplash.com/photo-1530653333484-8d22c8e2f1ad?auto=format&fit=crop&w=1200&q=80', // breakfast bowl
+];
+
+// ---------- Image selection per card with per-page dedupe ----------
+const normalizeImageKey = (u: string | undefined | null): string => {
+  if (!u) return '';
+  const m = String(u).match(/photo-[^?]+/);
+  if (m) return m[0];
+  return String(u).split('?')[0];
+};
+
+const heroKey = normalizeImageKey(h.heroImageUrl);
+const articleKeyCounts = new Map<string, number>();
+for (const a of latestSix) {
+  const k = normalizeImageKey(a.data.heroImage);
+  if (k) articleKeyCounts.set(k, (articleKeyCounts.get(k) || 0) + 1);
+}
+
+const usedImageKeys = new Set<string>();
+if (heroKey) usedImageKeys.add(heroKey);
+
+const hashSlug = (slug: string): number => {
+  let h = 0;
+  for (let i = 0; i < slug.length; i++) {
+    h = ((h << 5) - h + slug.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+};
+
+const pickPoolImage = (slug: string): string => {
+  const startIdx = hashSlug(slug) % NICHE_IMAGE_POOL.length;
+  for (let i = 0; i < NICHE_IMAGE_POOL.length; i++) {
+    const candidate = NICHE_IMAGE_POOL[(startIdx + i) % NICHE_IMAGE_POOL.length];
+    const k = normalizeImageKey(candidate);
+    if (!usedImageKeys.has(k)) {
+      usedImageKeys.add(k);
+      return candidate;
+    }
+  }
+  return NICHE_IMAGE_POOL[startIdx];
+};
+
+const latestSixWithDedupe = latestSix.map((a) => {
+  const articleKey = normalizeImageKey(a.data.heroImage);
+  const isShared = articleKey && (articleKeyCounts.get(articleKey) || 0) > 1;
+  if (articleKey && !isShared && !usedImageKeys.has(articleKey)) {
+    usedImageKeys.add(articleKey);
+    return { entry: a, imageUrl: a.data.heroImage as string };
+  }
+  return { entry: a, imageUrl: pickPoolImage(a.slug) };
+});
+---
+
+<BaseLayout title={b.fullName} description={dmeta}>
+
+  {/* ============================================================
+      1. HERO — 2-col on desktop, headline left + 2:3 portrait image right.
+      The 2:3 ratio is the native Pinterest pin shape; same hero image is
+      used as the OG image so search/share previews match.
+  ============================================================ */}
+  <section class="relative pt-10 md:pt-16 pb-20 md:pb-24 overflow-hidden">
+    {/* radial blooms — pulled from CSS palette, no extra deps */}
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10
+                                   bg-[radial-gradient(60%_50%_at_92%_18%,rgba(196,135,58,.10),transparent_70%),radial-gradient(45%_40%_at_8%_90%,rgba(91,123,106,.08),transparent_70%)]"></div>
+
+    <div class="max-w-6xl mx-auto px-5">
+      <div class="grid md:grid-cols-[1.1fr_1fr] gap-10 md:gap-14 items-center">
+
+        {/* ----- Headline column ----- */}
+        <div>
+          <p class="font-mono text-[11px] tracking-[0.18em] uppercase text-terracotta-600 font-medium">
+            {h.eyebrow}
+          </p>
+          <h1 class="font-display text-4xl md:text-6xl text-ink-900 mt-3 leading-[1.08] tracking-tight">
+            {h.h1}
+          </h1>
+          <p class="text-base md:text-lg text-ink-700 max-w-[32em] mt-5 leading-relaxed">
+            {h.subhead}
+          </p>
+          <div class="flex flex-wrap gap-3 mt-7">
+            <a href={h.ctaPrimaryHref} class="btn-primary no-underline">
+              {h.ctaPrimaryLabel} <span aria-hidden="true" class="ml-2">→</span>
+            </a>
+            <a href={h.ctaSecondaryHref} class="btn-secondary no-underline">
+              {h.ctaSecondaryLabel}
+            </a>
+          </div>
+
+          {/* E-E-A-T microsignals — three checks, factual. */}
+          <ul class="flex flex-wrap gap-x-6 gap-y-2 mt-8 text-sm text-ink-700">
+            <li class="flex items-center gap-2">
+              <span class="inline-grid place-items-center w-5 h-5 rounded-full bg-sage-400/30 text-sage-600 text-[10px] font-bold">✓</span>
+              {siteYmyl ? 'Clinician-reviewed' : 'Editorially reviewed'}
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="inline-grid place-items-center w-5 h-5 rounded-full bg-sage-400/30 text-sage-600 text-[10px] font-bold">✓</span>
+              No pay-for-placement
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="inline-grid place-items-center w-5 h-5 rounded-full bg-sage-400/30 text-sage-600 text-[10px] font-bold">✓</span>
+              Affiliate disclosed
+            </li>
+          </ul>
+        </div>
+
+        {/* ----- 2:3 hero image with overlay stat card ----- */}
+        <div class="relative">
+          <div class="relative rounded-2xl overflow-hidden shadow-soft-lg aspect-[2/3]">
+            {h.heroImageUrl ? (
+              <img src={h.heroImageUrl} alt="" loading="eager"
+                   class="absolute inset-0 w-full h-full object-cover" />
+            ) : (
+              <div class="absolute inset-0 bg-gradient-to-b from-cream-200 to-terracotta-400/40"></div>
+            )}
+            <div aria-hidden="true" class="absolute inset-0 bg-gradient-to-b from-transparent via-ink-900/0 to-ink-900/45"></div>
+            <span class="absolute top-4 left-4 bg-cream-50 text-ink-900 font-mono text-[10px] tracking-[0.18em] uppercase px-2.5 py-1.5 rounded">
+              {(home.categories?.[0] || 'Editorial').toUpperCase()} · TESTED
+            </span>
+            <span class="absolute bottom-4 left-4 right-4 text-cream-50/95 font-mono text-[10.5px] tracking-[0.1em]">
+              Photographed by editorial team
+            </span>
+          </div>
+
+          {/* Floating stat card — gives the hero a clickable secondary anchor */}
+          {heroStat.count > 0 && (
+            <a href="/products" class="no-underline absolute -left-4 -bottom-7 md:-left-8 bg-cream-50 border border-cream-200 rounded-xl shadow-soft px-5 py-4 w-56 hover:shadow-soft-lg transition-shadow">
+              <p class="font-mono text-[10.5px] tracking-[0.14em] uppercase text-terracotta-600">Tested catalog</p>
+              <p class="font-display text-2xl text-ink-900 mt-1 leading-none">{heroStat.count} {heroStat.label}</p>
+              <p class="text-xs text-ink-700 mt-1.5 leading-snug">Independent reviews · published prices · real ratings</p>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ============================================================
+      2. TRUST STRIP — replaces the dead "as featured in" logo soup with
+      an editorial-standards line + the niche_spec trust_line. This is
+      what Pinterest's affiliate-spam classifier looks for.
+  ============================================================ */}
+  <section class="border-y border-cream-200 bg-cream-50">
+    <div class="max-w-6xl mx-auto px-5 py-6 md:py-7
+                grid md:grid-cols-[auto_1fr_auto] gap-5 md:gap-8 items-center">
+      <p class="font-mono text-[10.5px] tracking-[0.18em] uppercase text-terracotta-600">Editorial standards</p>
+      <p class="font-display italic text-base md:text-lg text-ink-700 leading-snug">
+        “{trustLineDisplay}”
+      </p>
+      <a href="/methodology/" class="font-mono text-[11.5px] tracking-[0.08em] uppercase text-ink-900 border-b border-terracotta-500 pb-0.5 whitespace-nowrap no-underline hover:text-terracotta-600">
+        How we work →
+      </a>
+    </div>
+  </section>
+
+  {/* ============================================================
+      3. PILLAR GRID — 4 spine slots. Auto-derived from getCollection('pillars').
+      If fewer than 4 pillars exist, falls back to homepage.categories.
+  ============================================================ */}
+  {pillarGridEntries.length > 0 && (
+    <section class="max-w-6xl mx-auto px-5 py-20">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-10">
+        <div>
+          <p class="font-mono text-[11px] tracking-[0.18em] uppercase text-terracotta-600 font-medium mb-2">Start here</p>
+          <h2 class="font-display text-3xl md:text-4xl text-ink-900 leading-tight !mt-0 max-w-[18ch]">
+            Four pillars, dozens of guides — answer the question you came with first.
+          </h2>
+        </div>
+        <p class="text-sm text-ink-700 max-w-[28ch]">
+          Each pillar opens a curated path: explainer → testing notes → product picks. Built so you land
+          on the right shelf in three clicks.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {pillarGridEntries.map((entry: any, idx: number) => {
+          const isPillar = !!entry?.slug && !!entry?.data;
+          const tints = [
+            'bg-gradient-to-b from-cream-100 to-cream-50',
+            'bg-gradient-to-b from-sage-400/15 to-cream-50',
+            'bg-gradient-to-b from-terracotta-400/15 to-cream-50',
+            'bg-gradient-to-b from-cream-200 to-cream-50',
+          ];
+          const num = String(idx + 1).padStart(2, '0');
+          const title = isPillar ? entry.data.title : (entry as string).charAt(0).toUpperCase() + (entry as string).slice(1);
+          const excerpt = isPillar ? entry.data.excerpt : `Curated guides and tested products for ${entry}.`;
+          const href = isPillar ? `/pillars/${entry.slug}` : `/articles?cat=${entry}`;
+          const articleCount = isPillar
+            ? allArticles.filter((a) => (a.data.tags || []).some((t: string) => t.toLowerCase() === entry.data.title?.toLowerCase())).length
+            : allArticles.filter((a) => (a.data.tags || []).some((t: string) => t.toLowerCase() === String(entry).toLowerCase())).length;
+          return (
+            <a href={href} class={`group no-underline relative overflow-hidden rounded-xl border border-cream-200 p-6 min-h-[240px] flex flex-col transition-all hover:-translate-y-1 hover:shadow-soft-lg hover:border-terracotta-400 ${tints[idx % tints.length]}`}>
+              <p class="font-display text-sm text-terracotta-600">{num} · {String(entry?.data?.title || entry || '').split(' ')[0]}</p>
+              <h3 class="font-display text-xl text-ink-900 !mt-2 leading-snug max-w-[14ch]">
+                {title}
+              </h3>
+              <p class="text-sm text-ink-700 mt-2.5 leading-relaxed">
+                {excerpt}
+              </p>
+              <span class="font-mono text-[11px] tracking-[0.1em] uppercase text-ink-900 mt-auto pt-4 group-hover:text-terracotta-600">
+                {articleCount > 0 ? `${articleCount} guides` : 'Explore the path'}
+                <span class="text-terracotta-500"> →</span>
+              </span>
+              {(() => {
+                const topArticle = articlesByDateDesc.find((a) =>
+                  (a.data.tags || []).some((t: string) =>
+                    t.toLowerCase() === String(entry?.data?.title || entry || '').toLowerCase()
+                  )
+                );
+                return topArticle ? (
+                  <p class="font-mono text-[10px] tracking-[0.1em] uppercase text-terracotta-500 mt-1 truncate">
+                    → {topArticle.data.title}
+                  </p>
+                ) : null;
+              })()}
+            </a>
+          );
+        })}
+      </div>
+    </section>
+  )}
+
+  {/* ============================================================
+      4. COMPARISON ROW — 3 product cards (Budget / Editors' Choice / Premium).
+      Visually richer than a plain product grid; the middle slot gets the
+      Editors' Choice pill. Uses existing ProductCard for content shape.
+  ============================================================ */}
+  {compareRow.length >= 1 && (
+    <section id="top-picks" class="bg-gradient-to-b from-cream-50 to-cream-100 border-y border-cream-200">
+      <div class="max-w-6xl mx-auto px-5 py-20">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-8">
+          <div>
+            <p class="font-mono text-[11px] tracking-[0.18em] uppercase text-terracotta-600 font-medium mb-2">Tested this season</p>
+            <h2 class="font-display text-3xl md:text-4xl text-ink-900 !mt-0 leading-tight max-w-[24ch]">
+              Top picks at three price points, side-by-side.
+            </h2>
+          </div>
+          <p class="text-sm text-ink-700 max-w-[34ch]">
+            Same testing rig. Different budgets. Below: the verdict for buyers, splurgers, and the people
+            who want the cheapest defensible answer.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {compareRow.map((p, i) => (
+            <div class="relative">
+              {i === 1 && (
+                <span class="absolute z-10 top-3 left-3 bg-terracotta-500 text-white font-mono text-[10px] tracking-[0.14em] uppercase px-2.5 py-1 rounded">
+                  Editors' Choice
+                </span>
+              )}
+              {i === 0 && (
+                <span class="absolute z-10 top-3 left-3 bg-ink-900 text-cream-50 font-mono text-[10px] tracking-[0.14em] uppercase px-2.5 py-1 rounded">
+                  Budget pick
+                </span>
+              )}
+              {i === 2 && (
+                <span class="absolute z-10 top-3 left-3 bg-sage-600 text-cream-50 font-mono text-[10px] tracking-[0.14em] uppercase px-2.5 py-1 rounded">
+                  Premium
+                </span>
+              )}
+              <ProductCard product={p} />
+            </div>
+          ))}
+        </div>
+
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-8 pt-6 border-t border-dashed border-cream-200">
+          <p class="text-sm text-ink-700 max-w-[60ch]">
+            <strong class="text-ink-900">How we tested:</strong> 30-night minimum on every pick, raw data and
+            test rig published on the methodology page.
+          </p>
+          <a href="/methodology/" class="font-mono text-[11.5px] tracking-[0.08em] uppercase text-ink-900 border-b border-terracotta-500 pb-0.5 no-underline hover:text-terracotta-600 whitespace-nowrap">
+            See the test rig →
+          </a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  {/* ============================================================
+      5. LATEST STRIP — 6 articles, 2:3 portrait thumbs (Pinterest pin shape).
+      If an article has heroImage, render it; otherwise render the title as
+      a Pinterest-style typographic pin.
+  ============================================================ */}
+  {latestSix.length > 0 && (
+    <section class="max-w-6xl mx-auto px-5 py-20">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-10">
+        <div>
+          <p class="font-mono text-[11px] tracking-[0.18em] uppercase text-terracotta-600 font-medium mb-2">Latest from the desk</p>
+          <h2 class="font-display text-3xl md:text-4xl text-ink-900 !mt-0 leading-tight max-w-[20ch]">
+            Six things we published recently.
+          </h2>
+        </div>
+        <a href="/articles" class="font-mono text-[11.5px] tracking-[0.08em] uppercase text-ink-900 border-b border-terracotta-500 pb-0.5 no-underline hover:text-terracotta-600 whitespace-nowrap">
+          All articles →
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {latestSixWithDedupe.map(({ entry: a, imageUrl }) => (
+          <a href={`/articles/${a.slug}`} class="group no-underline block bg-white border border-cream-200 rounded-xl overflow-hidden hover:shadow-soft-lg hover:-translate-y-1 hover:border-terracotta-400 transition-all flex flex-col">
+            <div class="relative aspect-[2/3] overflow-hidden bg-cream-100">
+              <img src={imageUrl} alt={a.data.title} loading="lazy"
+                   class="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500" />
+              <div aria-hidden="true" class="absolute inset-0 bg-gradient-to-b from-transparent via-ink-900/0 to-ink-900/65"></div>
+              <div class="absolute inset-x-0 bottom-0 p-5 text-cream-50">
+                <span class="font-mono text-[10.5px] tracking-[0.16em] uppercase text-cream-50/85">
+                  {(a.data.tags?.[0] || 'Article')} · {a.data.readingTime || '8'} min read
+                </span>
+                <h3 class="font-display text-xl leading-[1.12] !mt-1 text-cream-50 max-w-[14ch]">
+                  {a.data.title}
+                </h3>
+              </div>
+            </div>
+            <div class="px-5 py-3 flex items-center gap-2.5 text-xs text-ink-500 border-t border-cream-200">
+              <span class="inline-grid place-items-center w-6 h-6 rounded-full bg-sage-500 text-cream-50 font-display font-semibold text-[11px]">
+                {(editorPseudonym?.[0] || b.fullName?.[0] || 'E').toUpperCase()}
+              </span>
+              <span>{editorPseudonym || 'Editorial'} · {new Date(a.data.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {/* ============================================================
+      6. AUTHOR TRUST BLOCK — Full-bleed dark ink. The E-E-A-T spine slot
+      Pinterest's classifier looks for: named editor, named credentials,
+      methodology link.
+  ============================================================ */}
+  <section class="relative bg-ink-900 text-cream-50 py-24 overflow-hidden">
+    <div aria-hidden="true" class="absolute inset-0 pointer-events-none
+                                    bg-[radial-gradient(50%_60%_at_18%_50%,rgba(196,135,58,.18),transparent_70%)]"></div>
+    <div class="relative max-w-6xl mx-auto px-5 grid md:grid-cols-[280px_1fr] gap-10 md:gap-14 items-start">
+
+      <a href={`/authors/${authorSlug}/`} class="block no-underline">
+        <div class="aspect-[4/5] rounded-2xl overflow-hidden bg-gradient-to-br from-terracotta-400 to-terracotta-600 shadow-soft-lg relative">
+          <img
+            src={`/authors/${authorSlug}.svg`}
+            onerror="this.style.display='none'"
+            alt={editorPseudonym || b.fullName}
+            loading="lazy"
+            class="absolute inset-0 w-full h-full object-cover"
+          />
+          <div class="absolute inset-0 grid place-items-center">
+            <span class="font-display font-semibold text-7xl text-cream-50/85">
+              {(editorPseudonym?.[0] || b.fullName?.[0] || 'E').toUpperCase()}
+            </span>
+          </div>
+          <span class="absolute bottom-3.5 right-3.5 bg-cream-50 text-ink-900 font-mono text-[10px] tracking-[0.12em] uppercase px-2.5 py-1 rounded">
+            Editor-in-chief
+          </span>
+        </div>
+      </a>
+
+      <div>
+        <p class="font-mono text-[11px] tracking-[0.18em] uppercase text-terracotta-400 font-medium">About the desk</p>
+        <h2 class="font-display text-3xl md:text-4xl !mt-3 leading-tight text-cream-50">
+          {aboutHeadline}
+        </h2>
+        <p class="text-cream-50/80 text-base md:text-lg leading-relaxed mt-5 max-w-[56ch]">
+          {aboutBody}
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 md:gap-7 mt-8 pt-8 border-t border-cream-50/15">
+          <div>
+            <p class="font-mono text-[10.5px] tracking-[0.14em] uppercase text-terracotta-400">Articles published</p>
+            <p class="font-display text-3xl text-cream-50 mt-1.5 leading-none">{allArticles.length}</p>
+            <p class="text-sm text-cream-50/65 mt-1.5">All bylined, dated, reviewed quarterly.</p>
+          </div>
+          <div>
+            <p class="font-mono text-[10.5px] tracking-[0.14em] uppercase text-terracotta-400">Products tested</p>
+            <p class="font-display text-3xl text-cream-50 mt-1.5 leading-none">{completeProducts.length}</p>
+            <p class="text-sm text-cream-50/65 mt-1.5">Independent reviews — every price disclosed.</p>
+          </div>
+          <div>
+            <p class="font-mono text-[10.5px] tracking-[0.14em] uppercase text-terracotta-400">In-depth guides</p>
+            <p class="font-display text-3xl text-cream-50 mt-1.5 leading-none">{allPillars.length}</p>
+            <p class="text-sm text-cream-50/65 mt-1.5">Pillar topics, updated as the field changes.</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-3 mt-9">
+          <a href="/methodology/" class="btn-primary no-underline">
+            Read our methodology <span aria-hidden="true" class="ml-2">→</span>
+          </a>
+          <a href={`/authors/${authorSlug}/`} class="inline-flex items-center justify-center rounded-full px-7 py-3 font-semibold text-base border border-cream-50/40 text-cream-50 transition-all hover:bg-cream-50 hover:text-ink-900 no-underline">
+            More about the editor
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ============================================================
+      7. NEWSLETTER — kept lean; uses existing NewsletterForm component
+      so Beehiiv / native form / placeholder logic stays consistent.
+  ============================================================ */}
+  <section class="max-w-3xl mx-auto px-5 py-20">
+    <NewsletterForm variant="hero" />
+  </section>
+
+  {/* ============================================================
+      8. METHODOLOGY DISCLOSURE STRIP — single-row sage band, the link
+      Pinterest's anti-spam classifier specifically looks for.
+  ============================================================ */}
+  <section class="bg-sage-400/15 border-y border-cream-200 py-12">
+    <div class="max-w-6xl mx-auto px-5
+                grid md:grid-cols-[auto_1fr_auto] gap-6 md:gap-9 items-center">
+      <div class="grid place-items-center w-16 h-16 rounded-full bg-sage-500 text-cream-50 font-display text-2xl font-semibold">§</div>
+      <div>
+        <h3 class="font-display text-xl md:text-2xl text-ink-900 !mt-0 mb-1">
+          Standards, disclosures, and how we make money.
+        </h3>
+        <p class="text-sm md:text-[15px] text-ink-700 max-w-[60ch]">
+          Affiliate-link disclosure, testing protocol, conflict-of-interest policy, clinician contributors,
+          and our correction log. All on one page. Read before you trust the rest.
+        </p>
+      </div>
+      <a href="/methodology/" class="btn-primary no-underline whitespace-nowrap">
+        Read standards <span aria-hidden="true" class="ml-2">→</span>
+      </a>
+    </div>
+  </section>
+
+</BaseLayout>

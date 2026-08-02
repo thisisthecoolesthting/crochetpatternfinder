@@ -1,0 +1,28 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import HowWeTest from '@/components/HowWeTest.astro';
+import home from '@/data/spawn-home.json';
+const b = home.brand;
+const tone = (home as { persona?: { tone?: string; ymyl?: boolean } }).persona?.tone ?? 'wellness';
+const methodology: string[] =
+  (home as { editorial?: { methodology?: string[] } }).editorial?.methodology ?? [];
+---
+
+<BaseLayout
+  title={`Methodology — ${b.fullName}`}
+  description={`How ${b.fullName} researches, tests, and discloses. Editorial tone: ${String(tone)}.`}
+  ogType="article"
+>
+  <main class="max-w-3xl mx-auto px-4 py-10">
+    <div class="prose">
+      <h1>How {b.fullName} works</h1>
+      <p>
+        This page outlines how we test products, cite sources, and keep shopping fields current. When
+        we use affiliate links, we may earn a commission; that does not change the price you pay. See
+        the <a href="/disclosure">affiliate disclosure</a> and contact us if you spot something that
+        looks out of date.
+      </p>
+    </div>
+    <HowWeTest methodology={methodology} title="Our review process" />
+  </main>
+</BaseLayout>

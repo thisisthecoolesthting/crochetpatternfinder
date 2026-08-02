@@ -1,0 +1,58 @@
+---
+/**
+ * Ezoic (or other) display ads — no-op when provider is "none".
+ * Pass slot key from site distribution config in spawn-home.
+ */
+export interface Props {
+  position: 'above_fold' | 'mid_content' | 'end';
+  /** Optional label for E2E / debugging */
+  label?: string;
+}
+import home from '@/data/spawn-home.json';
+type SpawnHomeDist = {
+  distribution?: {
+    ads?: { provider?: string; site_id?: string; slot_ids?: Record<string, string> };
+  };
+};
+const dist = (home as SpawnHomeDist).distribution;
+const provider = dist?.ads?.provider ?? 'none';
+const siteId = dist?.ads?.site_id ?? '';
+const slotKey =
+  Astro.props.position === 'above_fold'
+    ? 'hero'
+    : Astro.props.position === 'mid_content'
+      ? 'content_mid'
+      : 'footer';
+const slotId = dist?.ads?.slot_ids?.[String(slotKey)] ?? '';
+const showEzoic = provider === 'ezoic' && siteId && slotId;
+const showPlaceholder = !showEzoic;
+const heightClass =
+  Astro.props.position === 'above_fold'
+    ? 'min-h-[90px] md:min-h-[120px]'
+    : Astro.props.position === 'mid_content'
+      ? 'min-h-[250px] md:min-h-[280px]'
+      : 'min-h-[120px] md:min-h-[160px]';
+---
+{showEzoic ? (
+  <div class="ad-slot my-6 text-center" data-ad-position={Astro.props.position} data-ezoic={slotId}>
+    <div id={`ezoic-pub-ad-placeholder-${slotId}`} class={`${heightClass} rounded-2xl bg-ink-50/40`}>
+      <span class="text-xs text-ink-500/50">Ad</span>
+    </div>
+  </div>
+) : showPlaceholder ? (
+  <div
+    class="ad-slot my-6 text-center not-prose"
+    data-ad-position={Astro.props.position}
+    data-ad-placeholder="true"
+    aria-label="Advertisement"
+  >
+    <div
+      class={`${heightClass} rounded-2xl border border-dashed border-cream-300/80 bg-gradient-to-b from-cream-50 to-cream-100/60 flex flex-col items-center justify-center gap-1 px-4`}
+    >
+      <span class="text-[10px] uppercase tracking-[0.22em] text-ink-500 font-semibold">Advertisement</span>
+      {Astro.props.label ? (
+        <span class="text-[10px] text-ink-400">{Astro.props.label}</span>
+      ) : null}
+    </div>
+  </div>
+) : null}

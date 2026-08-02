@@ -1,0 +1,44 @@
+---
+export interface Props {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  dark?: boolean;
+}
+
+const { eyebrow, title, description, dark = false } = Astro.props;
+---
+
+<section
+  class:list={[
+    'border-b',
+    dark
+      ? 'hero-band py-12 md:py-16 border-cream-200/10'
+      : 'bg-cream-50 border-cream-200 py-10 md:py-14',
+  ]}
+>
+  <div class="max-w-site mx-auto px-4 sm:px-5">
+    {eyebrow && (
+      <p class:list={['section-eyebrow mb-3', dark && 'text-terracotta-400']}>{eyebrow}</p>
+    )}
+    <h1
+      class:list={[
+        'font-display text-4xl md:text-5xl leading-tight text-balance !mt-0 max-w-[22ch]',
+        dark ? 'text-cream-50' : 'text-ink-900',
+      ]}
+    >
+      {title}
+    </h1>
+    {description && (
+      <p
+        class:list={[
+          'mt-4 text-base md:text-lg leading-relaxed max-w-[52ch]',
+          dark ? 'text-cream-50/85' : 'text-ink-600',
+        ]}
+      >
+        {description}
+      </p>
+    )}
+    <slot />
+  </div>
+</section>

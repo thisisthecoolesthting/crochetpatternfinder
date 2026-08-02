@@ -1,0 +1,47 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const pillars = await getCollection('pillars', ({ data }) => data.status === 'published');
+const sorted = pillars.sort((a, b) => +new Date(b.data.publishedAt) - +new Date(a.data.publishedAt));
+---
+
+<BaseLayout title="Guides" description="In-depth guides for navigating perimenopause and menopause.">
+  <section class="max-w-5xl mx-auto px-5 py-12">
+    <h1 class="font-display text-4xl text-ink-900 mb-3">Guides</h1>
+    <p class="text-ink-700 mb-10 max-w-prose">
+      Long-form authority guides. We start from what's actually happening in your body,
+      then layer in behavioral and product choices that work.
+    </p>
+
+    {sorted.length === 0 && (
+      <p class="text-ink-700">First guides coming soon.</p>
+    )}
+
+    <div class="grid md:grid-cols-2 gap-8">
+      {sorted.map((p) => (
+        <a href={`/pillars/${p.slug}`} class="group no-underline block">
+          {p.data.heroImage ? (
+            <div class="rounded-lg overflow-hidden mb-4 bg-cream-200 aspect-[16/10]">
+              <img
+                src={p.data.heroImage}
+                alt={p.data.title}
+                loading="lazy"
+                class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+              />
+            </div>
+          ) : (
+            <div class="rounded-lg bg-cream-200 aspect-[16/10] mb-4"></div>
+          )}
+          <h2 class="font-display text-2xl text-ink-900 !mt-0 group-hover:text-terracotta-500 transition-colors">
+            {p.data.title}
+          </h2>
+          <p class="text-ink-700 mt-2 text-base">{p.data.excerpt}</p>
+          <p class="text-ink-500 text-xs mt-3">
+            {new Date(p.data.publishedAt).toLocaleDateString()}
+          </p>
+        </a>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

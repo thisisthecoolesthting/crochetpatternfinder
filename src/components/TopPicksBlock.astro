@@ -1,0 +1,85 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { amazonAffiliateUrl } from '@/utils/related-products';
+
+export interface Props {
+  products: CollectionEntry<'products'>[];
+  labels?: [string, string, string];
+}
+
+const { products, labels = ['Best Overall', 'Budget Pick', 'Top Splurge'] } = Astro.props;
+if (!products || products.length === 0) return;
+
+const associateTag = import.meta.env.PUBLIC_ASSOCIATE_TAG ?? 'crochetpatternfinder-20';
+const picks = products.slice(0, 3);
+const FB = "data:image/svg+xml;utf8," + encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='120' height='120' fill='#F5EFE6'/></svg>`
+);
+---
+
+<aside class="my-8 rounded-2xl border border-terracotta-200 bg-cream-50 overflow-hidden not-prose">
+  <div class="px-5 py-3 border-b border-cream-200 flex items-center gap-3">
+    <span class="font-mono text-[10.5px] tracking-[0.16em] uppercase text-terracotta-600 font-medium">Our top picks</span>
+    <span class="text-xs text-ink-500">Jump straight to the products</span>
+  </div>
+
+  <div class={`grid divide-y md:divide-y-0 md:divide-x divide-cream-200 ${picks.length === 1 ? 'grid-cols-1' : picks.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}>
+    {picks.map((p, i) => {
+      const d = p.data as any;
+      const href = amazonAffiliateUrl(p, associateTag);
+      const title = d.cardTitle?.trim() ||
+        (d.title?.length > 52 ? d.title.slice(0, 49) + '…' : d.title || '');
+      return (
+        <div class="p-5 flex flex-col gap-3">
+          <span class="inline-block self-start bg-terracotta-500 text-cream-50 font-mono
+                       text-[10px] tracking-[0.12em] uppercase px-2.5 py-1 rounded-full">
+            {labels[i]}
+          </span>
+          <div class="flex gap-4 items-start">
+            <img
+              src={d.imageUrl || FB}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              onerror={`this.onerror=null;this.src='${FB}'`}
+              class="w-20 h-20 object-contain rounded-xl bg-cream-100 flex-shrink-0 p-1.5"
+            />
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-ink-900 text-sm leading-snug">{title}</p>
+              {d.cardPick && (
+                <p class="text-xs text-ink-500 italic mt-1 leading-snug">{d.cardPick}</p>
+              )}
+              {(d.price || d.rating) && (
+                <p class="text-xs text-ink-700 mt-2">
+                  {d.price && <strong>${(d.price as number).toFixed(2)}</strong>}
+                  {d.price && d.rating && <span class="mx-1.5 text-ink-400">·</span>}
+                  {d.rating && (
+                    <span>
+                      ★ {(d.rating as number).toFixed(1)}
+                      {d.reviewCount ? ` (${(d.reviewCount as number).toLocaleString()})` : ''}
+                    </span>
+                  )}
+                </p>
+              )}
+            </div>
+          </div>
+          <a
+            href={href}
+            target="_blank"
+            rel="nofollow noopener sponsored"
+            class="block w-full text-center bg-terracotta-500 hover:bg-terracotta-600
+                   text-cream-50 font-mono text-[11px] tracking-[0.12em] uppercase
+                   px-4 py-2.5 rounded-full transition-colors no-underline"
+          >
+            View on Amazon ↗
+          </a>
+        </div>
+      );
+    })}
+  </div>
+
+  <p class="px-5 py-2.5 text-[10.5px] text-ink-500 border-t border-cream-200">
+    Prices may change. As an Amazon Associate we earn from qualifying purchases.
+    <a href="/disclosure" class="underline underline-offset-2">Disclosure.</a>
+  </p>
+</aside>

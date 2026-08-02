@@ -1,0 +1,75 @@
+---
+// Mobile-only sticky bar anchored to the viewport bottom. Shows the first
+// product mentioned in an article + a direct Amazon affiliate CTA.
+// Dismissible by the reader via the × button.
+
+import type { CollectionEntry } from 'astro:content';
+import { amazonAffiliateUrl } from '@/utils/related-products';
+
+export interface Props {
+  product: CollectionEntry<'products'>;
+}
+
+const { product } = Astro.props;
+const associateTag = import.meta.env.PUBLIC_ASSOCIATE_TAG ?? 'crochetpatternfinder-20';
+const href = amazonAffiliateUrl(product, associateTag);
+---
+
+<div
+  id="sticky-product-bar"
+  class="md:hidden fixed bottom-0 left-0 right-0 z-40 px-3 pb-3 pointer-events-none"
+  data-sticky-product-bar
+>
+  <div
+    class="bg-white/95 backdrop-blur-sm rounded-[1.5rem] shadow-soft-lg border border-cream-200/70
+           p-2.5 flex items-center gap-3 pointer-events-auto"
+  >
+    {product.data.imageUrl && (
+      <img
+        src={product.data.imageUrl}
+        alt=""
+        loading="lazy"
+        class="w-11 h-11 rounded-xl object-contain bg-cream-100 shrink-0 p-0.5"
+      />
+    )}
+    <div class="flex-1 min-w-0">
+      <p class="text-[10px] uppercase tracking-[0.15em] text-terracotta-600 font-semibold leading-tight">
+        Top pick
+      </p>
+      <p class="text-xs font-medium text-ink-900 leading-tight truncate">{product.data.title}</p>
+    </div>
+    <a
+      href={href}
+      rel="nofollow sponsored noopener"
+      target="_blank"
+      class="inline-flex items-center justify-center rounded-full bg-terracotta-500 hover:bg-terracotta-600
+             text-white text-xs font-semibold px-3.5 py-2 shadow-soft whitespace-nowrap shrink-0
+             transition-all duration-200 no-underline"
+    >
+      Shop →
+    </a>
+    <button
+      type="button"
+      aria-label="Dismiss"
+      data-sticky-dismiss
+      class="shrink-0 w-7 h-7 rounded-full bg-cream-100 text-ink-500 hover:text-ink-900 hover:bg-cream-200
+             flex items-center justify-center transition-colors duration-200"
+    >
+      <svg viewBox="0 0 20 20" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <line x1="5" y1="5" x2="15" y2="15" />
+        <line x1="15" y1="5" x2="5" y2="15" />
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const bar = document.querySelector('[data-sticky-product-bar]');
+    const btn = document.querySelector('[data-sticky-dismiss]');
+    if (!bar || !btn) return;
+    btn.addEventListener('click', () => {
+      bar.style.display = 'none';
+    });
+  })();
+</script>

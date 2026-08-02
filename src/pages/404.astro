@@ -1,0 +1,32 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import home from '@/data/spawn-home.json';
+
+const b = home.brand;
+const links = [
+  { href: '/', label: 'Home' },
+  { href: '/pillars', label: 'Guides' },
+  { href: '/products', label: 'Reviews' },
+  { href: '/articles', label: 'Articles' },
+  { href: '/methodology/', label: 'Methodology' },
+];
+---
+
+<BaseLayout title={`Page not found — ${b.fullName}`} description="The page you requested is not available." noindex={true}>
+  <section class="max-w-site mx-auto px-4 sm:px-5 py-20 md:py-28 text-center">
+    <p class="section-eyebrow mb-3">404</p>
+    <h1 class="font-display text-4xl md:text-5xl text-ink-900 !mt-0">This page is not in our index.</h1>
+    <p class="text-ink-600 mt-4 max-w-md mx-auto leading-relaxed">
+      The URL may be outdated or the guide moved. Start from one of the links below.
+    </p>
+    <ul class="mt-10 flex flex-wrap justify-center gap-3">
+      {links.map((link) => (
+        <li>
+          <a href={link.href} class="btn-secondary-light no-underline text-sm cursor-pointer">
+            {link.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</BaseLayout>

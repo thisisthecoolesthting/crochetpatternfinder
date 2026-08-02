@@ -1,0 +1,125 @@
+{
+  "brand": {
+    "shortName": "CrochetPatternFinder",
+    "fullName": "CrochetPatternFinder",
+    "taglineShort": "",
+    "identity": {
+      "palette": {
+        "primary": "#8B5A3C",
+        "accent": "#E8A87C",
+        "cream": "#FAF5ED",
+        "ink": "#2D1B12"
+      },
+      "fonts": {
+        "display": "Fraunces",
+        "body": "Inter",
+        "mono": "JetBrains Mono"
+      },
+      "mark": {
+        "svgPath": "brand/crochetpatternfinder.svg",
+        "svgPublicPath": "/brand/crochetpatternfinder.svg",
+        "sizeRem": 1.75,
+        "position": "left-of-wordmark"
+      },
+      "wordmark": {
+        "weight": 600,
+        "tracking": "tight",
+        "case": "normal"
+      },
+      "headerVariant": "minimal",
+      "eyebrowText": "CROCHET PATTERNS \u00b7 YARN \u00b7 HOOKS",
+      "fontCssHref": "https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap"
+    }
+  },
+  "persona": {
+    "ymyl": false,
+    "tone": "wellness"
+  },
+  "editorial": {
+    "authorSlug": "rosa-linden",
+    "author_slug": "rosa-linden",
+    "methodology": [
+      "We crochet every pattern we review from start to finish \u2014 no review based on screenshots or designer copy.",
+      "Each review notes skill level honestly (beginner / advanced beginner / intermediate / advanced) using craft-yarn-council standards, not the designer's claim.",
+      "Yarn substitutions are tested on at least one alternate skein and reviewed for gauge match, hand, and color stability.",
+      "Hook recommendations are based on the actual finished fabric \u2014 drape, stitch definition, hand fatigue \u2014 not on the designer's first choice.",
+      "Designer relationships are disclosed; if we received a free pattern from a designer we mark it on the post and don't change the verdict because of it.",
+      "Reader fixes for tricky rows are credited and folded back into the post so the next crocheter doesn't hit the same wall."
+    ],
+    "ymyl": false
+  },
+  "newsletter": {
+    "title": "The CrochetPatternFinder weekly",
+    "subtitle": "Practical picks and straight answers from CrochetPatternFinder, once a week. No spam.",
+    "kicker": "Stay in the loop"
+  },
+  "supportEmail": "hello@crochetpatternfinder.org",
+  "defaultAuthorSlug": "crochetpatternfinder-author",
+  "defaultMetaDescription": "Honest pattern reviews, yarn recommendations, and hook tests from people who actually crochet. No fluff, no paywall walls, just what works.",
+  "homepage": {
+    "eyebrow": "Curated crochet patterns + supplies",
+    "h1": "The Pattern Finder for Crocheters Who Want Results",
+    "subhead": "Honest pattern reviews, yarn recommendations, and hook tests from people who actually crochet. No fluff, no paywall walls, just what works.",
+    "ctaPrimaryLabel": "Browse Pattern Reviews",
+    "ctaPrimaryHref": "/",
+    "ctaSecondaryLabel": "See Yarn Picks",
+    "ctaSecondaryHref": "/methodology",
+    "trustLine": "Independent reviews \u00b7 reader-supported",
+    "heroImageUrl": "https://images.unsplash.com/photo-1604010651834-c52d86c5a85a?w=1600&q=85"
+  },
+  "about": {
+    "headline": "Patterns and supplies, honestly reviewed",
+    "body": "CrochetPatternFinder exists because search for a good crochet pattern and you'll drown in low-effort roundups. We pick one pattern at a time, crochet it, and write about what actually happened \u2014 what the designer got right, what tripped us up, whether the yarn suggestion holds up, and whether the hook matters. If you want curation with fingerprints on it, you're in the right place."
+  },
+  "navigation": [
+    {
+      "href": "/",
+      "label": "Home"
+    },
+    {
+      "href": "/pillars",
+      "label": "Guides"
+    },
+    {
+      "href": "/articles",
+      "label": "Articles"
+    },
+    {
+      "href": "/products",
+      "label": "Reviews"
+    },
+    {
+      "href": "/about",
+      "label": "About"
+    }
+  ],
+  "distribution": {
+    "ads": {
+      "provider": "none",
+      "site_id": "",
+      "slot_ids": {
+        "hero": "",
+        "content_mid": "",
+        "footer": ""
+      }
+    },
+    "email_capture": {
+      "provider": "none",
+      "form_action": "",
+      "list_id": ""
+    },
+    "phone_case_promo": {
+      "enabled": true,
+      "store_url": "https://phonecasesforall.com",
+      "headline": "Custom phone cases, free shipping",
+      "subhead": "Thousands of designs for iPhone & Samsung \u2014 from our own shop.",
+      "cta": "Browse cases \u2192",
+      "utm_campaign": "crochetpatternfinder.org"
+    }
+  },
+  "analytics": {
+    "ga_measurement_id": "G-T8689NW0DP",
+    "ga_property_id": "540652699",
+    "search_console_property": "https://crochetpatternfinder.org/"
+  }
+}

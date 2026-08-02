@@ -1,0 +1,149 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import NewsletterForm from '@/components/NewsletterForm.astro';
+import AuthorByline from '@/components/AuthorByline.astro';
+import MedicalDisclaimer from '@/components/MedicalDisclaimer.astro';
+import AffiliateDisclosure from '@/components/AffiliateDisclosure.astro';
+import TopPicksBlock from '@/components/TopPicksBlock.astro';
+import ArticleToC from '@/components/ArticleToC.astro';
+import { getCollection, getEntry } from 'astro:content';
+import { getRelatedProductsFromBody } from '@/utils/related-products';
+import { siteOrigin } from '@/utils/site-origin';
+import home from '@/data/spawn-home.json';
+
+export async function getStaticPaths() {
+  const pillars = await getCollection('pillars', ({ data }) => data.status !== 'draft');
+  return pillars.map((p) => ({
+    params: { slug: p.slug },
+    props: { entry: p },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+const b = home.brand;
+const nl = home.newsletter;
+const siteYmyl = (home as { persona?: { ymyl?: boolean } }).persona?.ymyl === true;
+const o = siteOrigin();
+const defSlug = (home as { defaultAuthorSlug?: string }).defaultAuthorSlug || 'default-author';
+const authorSlug = entry.data.author ?? defSlug;
+const author = await getEntry('authors', authorSlug);
+const relatedProducts = await getRelatedProductsFromBody(entry.body);
+const topProduct = relatedProducts[0];
+const publishedISO = new Date(entry.data.publishedAt).toISOString();
+const modifiedISO = entry.data.updatedAt ? new Date(entry.data.updatedAt).toISOString() : undefined;
+const showMedical = siteYmyl;
+const orgPub = b.fullName;
+const orgUrl = o;
+const personSchema = author
+  ? {
+      '@type': 'Person' as const,
+      '@id': `${o}/authors/${author.slug}/#person`,
+      name: author.data.name,
+      url: `${o}/authors/${author.slug}/`,
+      image: `${o}${author.data.photoUrl}`,
+      jobTitle: author.data.role,
+    }
+  : { '@type': 'Organization' as const, name: orgPub, url: orgUrl };
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: entry.data.title,
+  description: entry.data.metaDescription,
+  datePublished: publishedISO,
+  dateModified: modifiedISO ?? publishedISO,
+  author: personSchema,
+  publisher: { '@type': 'Organization', name: b.fullName, url: o },
+  keywords: entry.data.targetKeyword,
+  image: entry.data.heroImage ? [entry.data.heroImage] : undefined,
+  mainEntityOfPage: { '@type': 'WebPage', '@id': `${o}/pillars/${entry.slug}/` },
+};
+
+// SEO: append year to pillar H1 for best-of query intent matching
+const currentYear = new Date().getFullYear();
+const h1Text = entry.data.targetKeyword
+  ? `${entry.data.title} — ${currentYear} Guide`
+  : entry.data.title;
+---
+
+<BaseLayout
+  title={entry.data.title}
+  description={entry.data.metaDescription}
+  image={entry.data.heroImage}
+  ogType="article"
+  articlePublishedTime={publishedISO}
+  articleModifiedTime={modifiedISO}
+  articleAuthor={author?.data.name ?? b.fullName}
+  articleSection={entry.data.targetKeyword}
+  articleTags={entry.data.tags}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+
+  <div class="max-w-6xl mx-auto px-5 py-12 md:py-16 pb-20 flex gap-12 xl:gap-16 items-start">
+    <ArticleToC />
+
+    <article class="min-w-0 flex-1">
+      {showMedical && <MedicalDisclaimer />}
+
+      <header class="mb-8">
+        <h1 class="font-display text-4xl md:text-5xl text-ink-900 mb-3 !mt-0">{h1Text}</h1>
+        <AffiliateDisclosure />
+      </header>
+
+      <AuthorByline
+        authorSlug={authorSlug}
+        publishedAt={entry.data.publishedAt}
+        reviewedAt={entry.data.reviewedAt ?? entry.data.updatedAt}
+      />
+
+      {entry.data.heroImage && (
+        <figure class="mb-10 -mx-4 md:mx-0">
+          <img
+            src={entry.data.heroImage}
+            alt={entry.data.title}
+            loading="eager"
+            class="w-full h-auto rounded-3xl object-cover aspect-[16/9] max-h-[540px] shadow-soft"
+          />
+        </figure>
+      )}
+
+      <div class="prose prose-lg prose-ink max-w-none">
+        <Content />
+      </div>
+
+      {author && (
+        <aside class="not-prose my-10 flex gap-5 items-start p-6 bg-cream-100 rounded-2xl border border-cream-200/60">
+          <a href={`/authors/${author.slug}/`} class="shrink-0">
+            <img
+              src={author.data.photoUrl}
+              alt={author.data.name}
+              width="72"
+              height="72"
+              class="w-[72px] h-[72px] rounded-full object-cover ring-2 ring-terracotta-200"
+              loading="lazy"
+            />
+          </a>
+          <div>
+            <p class="font-semibold text-ink-900 text-sm mb-1">
+              Written by <a href={`/authors/${author.slug}/`} class="hover:text-terracotta-600 transition-colors">{author.data.name}</a>
+            </p>
+            <p class="text-sm text-ink-700 leading-relaxed">
+              {author.data.bio ?? "Editorial contributor. Product tester and researcher. Everything on this site reflects hands-on testing, reader feedback, and cited sources."}
+              {' '}<a href="/methodology/" class="text-terracotta-600 hover:underline">How I research →</a>
+            </p>
+          </div>
+        </aside>
+      )}
+
+      {relatedProducts.length >= 1 && (
+        <div id="top-picks">
+          <TopPicksBlock products={relatedProducts} />
+        </div>
+      )}
+    </article>
+  </div>
+
+  <div class="max-w-3xl mx-auto px-5 pb-20">
+    <NewsletterForm variant="inline" title={nl.title} subtitle={nl.subtitle} />
+  </div>
+</BaseLayout>
