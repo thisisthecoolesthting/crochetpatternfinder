@@ -4,12 +4,48 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import home from '@/data/spawn-home.json';
 const b = home.brand;
 const id = b.identity;
+
+const faqs = [
+  {
+    question: 'What is the crochet pattern finder and how does it work?',
+    answer:
+      "Our pattern finder indexes thousands of free crochet patterns from sites like AllFreeCrochet, Yarnspirations, and Moogly so you can search and filter them in one place instead of hopping between sites. Type a term into the search box, or use the category chips (Amigurumi, Blankets, Hats, Scarves, Baby, Bags, General) and the source filter to narrow results, then click through to read the full pattern on the original site.",
+  },
+  {
+    question: 'Are the patterns in the finder actually free?',
+    answer:
+      'Yes — every result links out to a free pattern page on the publisher’s own site. We don’t index paid pattern marketplaces or subscription-only pattern libraries, so anything you find here is free to read and crochet. See our <a href="/about">about page</a> for more on how we pick which sites we pull from.',
+  },
+  {
+    question: 'Can I search by yarn weight or skill level in the pattern finder?',
+    answer:
+      "Not yet as a dedicated filter — today the finder filters by project category (amigurumi, blankets, hats, scarves, baby items, bags) and by source site, and difficulty shows up right on many pattern cards. The source page for each pattern will list the full yarn weight and hook size specifics. Skill-level and yarn-weight filters are on our roadmap.",
+  },
+  {
+    question: 'Does CrochetPatternFinder review yarn and hooks too, or just link out to patterns?',
+    answer:
+      'Both. The pattern finder above is a free-pattern search tool, and separately we hands-on test crochet hooks, yarn, and other tools using the process explained on our <a href="/how-we-test">how we test page</a>. You can browse those write-ups at <a href="/products">reviewed products</a>.',
+  },
+];
+
+const faqSchema = faqs.length
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: f.answer },
+      })),
+    }
+  : null;
 ---
 <BaseLayout
   title="Free Crochet Pattern Finder — Search 1,000s of Free Patterns"
-  description="Search thousands of free crochet patterns by category: amigurumi, blankets, hats, scarves, baby and more. Updated daily from the best free crochet sites."
+  description="Free crochet pattern finder: search thousands of free patterns by category — amigurumi, blankets, hats, scarves, baby and more — indexed daily from AllFreeCrochet, Yarnspirations, Moogly and more."
   canonicalUrl={`${id.siteUrl}/find`}
 >
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
   <main class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
 
     <!-- Hero -->
@@ -86,6 +122,19 @@ const id = b.identity;
       <button id="load-more" class="hidden rounded-xl border-2 border-orange-400 text-orange-600 hover:bg-orange-50 font-semibold px-8 py-3 transition-colors">
         Load more patterns
       </button>
+    </div>
+
+    <!-- FAQ -->
+    <div class="max-w-2xl mx-auto pb-10">
+      <h2 class="text-2xl font-semibold mb-4 text-ink-900">Frequently Asked Questions</h2>
+      <div class="space-y-4">
+        {faqs.map((f) => (
+          <div class="border-b border-gray-200 pb-4">
+            <h3 class="text-lg font-medium mb-1 text-ink-900">{f.question}</h3>
+            <p class="text-gray-700" set:html={f.answer} />
+          </div>
+        ))}
+      </div>
     </div>
 
   </main>
