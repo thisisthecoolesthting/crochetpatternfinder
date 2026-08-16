@@ -1,26 +1,25 @@
 ---
-// Drop-in CTA for product reviews. Used inline within Markdown via:
-//   <AffiliateCTA asin="B0XXXXXXXX" label="Check current price on Amazon" />
-//
-// If `url` is omitted, we build it from ASIN using your Associate tag.
+// Amazon Associates program retired 2026-08. This component now refuses to
+// render any Amazon/amzn.to link. Pass an explicit non-Amazon `url` (e.g. an
+// owned-product funnel link) to render a CTA; otherwise it renders nothing.
 export interface Props {
   asin?: string;
   url?: string;
   label?: string;
 }
-const ASSOCIATE_TAG = import.meta.env.PUBLIC_ASSOCIATE_TAG ?? 'crochetpatternfinder-20';
-const { asin, url, label = 'Check price on Amazon' } = Astro.props;
-const href = url ?? (asin
-  ? `https://www.amazon.com/dp/${asin}?tag=${ASSOCIATE_TAG}&linkCode=ll1`
-  : '#');
+const { url, label = 'Learn more' } = Astro.props;
+const isAmazon = (u?: string) => !!u && /amazon\.[a-z.]{2,8}|amzn\.to/i.test(u);
+const href = (url && !isAmazon(url)) ? url : undefined;
 ---
-<p class="my-6 text-center">
-  <a
-    href={href}
-    rel="nofollow sponsored noopener"
-    target="_blank"
-    class="btn-primary no-underline"
-  >
-    {label} →
-  </a>
-</p>
+{href && (
+  <p class="my-6 text-center">
+    <a
+      href={href}
+      rel="sponsored noopener"
+      target="_blank"
+      class="btn-primary no-underline"
+    >
+      {label} -&gt;
+    </a>
+  </p>
+)}

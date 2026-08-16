@@ -56,27 +56,9 @@ const productSchema: Record<string, any> = {
   description: seoDesc,
   sku: data.asin,
   mpn: data.asin,
-  brand: {
-    '@type': 'Brand',
-    name: 'Amazon',
-  },
   url: `${o}/products/${product.slug}/`,
 };
 if (data.imageUrl) productSchema.image = [data.imageUrl];
-if (data.price) {
-  productSchema.offers = {
-    '@type': 'Offer',
-    price: data.price.toFixed(2),
-    priceCurrency: 'USD',
-    availability: 'https://schema.org/InStock',
-    url: data.affiliateUrl,
-    priceValidUntil: new Date(Date.now() + 30 * 86400000).toISOString().substring(0, 10),
-    seller: {
-      '@type': 'Organization',
-      name: 'Amazon',
-    },
-  };
-}
 
 // Nested editorial review — satisfies Google's "review or aggregateRating
 // required" rule for every product page, even those without Amazon rating.
@@ -152,13 +134,13 @@ if (data.rating && data.reviewCount) {
 
     {needsMedicalDisclaimer && <MedicalDisclaimer />}
 
-    <AffiliateCTA asin={data.asin} url={data.affiliateUrl} label="Check current price on Amazon" />
+    <AffiliateCTA asin={data.asin} url={data.affiliateUrl} label="Learn more" />
 
     <div class="prose prose-lg prose-ink max-w-none mt-10">
       <Content />
     </div>
 
-    <AffiliateCTA asin={data.asin} url={data.affiliateUrl} label="See it on Amazon" />
+    <AffiliateCTA asin={data.asin} url={data.affiliateUrl} label="Learn more" />
 
     <hr class="my-10 border-cream-200" />
     <p class="text-xs text-ink-500">
@@ -168,7 +150,7 @@ if (data.rating && data.reviewCount) {
       </a>
       .
       Last checked: {data.lastSeen ? new Date(data.lastSeen).toLocaleDateString() : '&mdash;'}.
-      Prices and availability change. We earn a commission on qualifying purchases.
+      Prices and availability change. This site does not run Amazon affiliate links.
       <a href="/methodology/" class="text-terracotta-600 hover:underline"> How we research &rarr;</a>
     </p>
   </article>

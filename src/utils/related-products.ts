@@ -41,12 +41,8 @@ export async function getRelatedProductsFromBody(
 // constructed URL from the ASIN + associate tag.
 export function amazonAffiliateUrl(
   product: CollectionEntry<'products'>,
-  associateTag = import.meta.env.PUBLIC_ASSOCIATE_TAG || 'crochetpatternfinder-20',
+  associateTag = 'retired',
 ): string {
-  if (product.data.affiliateUrl && product.data.affiliateUrl.startsWith('http')) {
-    return product.data.affiliateUrl;
-  }
-  const asin = product.data.asin?.toUpperCase();
-  if (!asin) return '#';
-  return `https://www.amazon.com/dp/${asin}?tag=${associateTag}&linkCode=ll1`;
+  // Amazon Associates retired 2026-08 -- never return a live Amazon URL.
+  return '#';
 }
