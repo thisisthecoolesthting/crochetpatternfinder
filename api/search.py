@@ -3,10 +3,23 @@
 CrochetPatternFinder search API -- port 3088
 """
 from flask import Flask, request, jsonify
-import sqlite3, os
+from pathlib import Path
+import os
+import sqlite3
 
 app = Flask(__name__)
-DB = '/var/www/crochetpatternfinder/patterns.db'
+DB = os.environ.get(
+    'CROCHET_PATTERN_DB',
+    str(Path(__file__).resolve().parents[1] / 'patterns.db'),
+)
+
+
+def bounded_int(name, default, minimum, maximum):
+    try:
+        value = int(request.args.get(name, default))
+    except (TypeError, ValueError):
+        value = default
+    return max(minimum, min(value, maximum))
 
 def ensure_db():
     conn = sqlite3.connect(DB)
@@ -42,8 +55,8 @@ def search():
     q      = request.args.get('q', '').strip()
     cat    = request.args.get('category', '').strip()
     src    = request.args.get('source', '').strip()
-    limit  = min(int(request.args.get('limit', 24)), 100)
-    offset = int(request.args.get('offset', 0))
+    limit  = bounded_int('limit', 24, 1, 100)
+    offset = bounded_int('offset', 0, 0, 100000)
 
     where, params = ['1=1'], []
     if q:
@@ -91,6 +104,14 @@ def categories():
     cats = conn.execute('SELECT DISTINCT category FROM patterns WHERE category != "" ORDER BY category').fetchall()
     conn.close()
     return jsonify([r['category'] for r in cats])
+
+
+@app.route('/api/health')
+def health():
+    conn = get_conn()
+    total = conn.execute('SELECT COUNT(*) FROM patterns').fetchone()[0]
+    conn.close()
+    return jsonify({'ok': True, 'patterns': total})
 
 if __name__ == '__main__':
     ensure_db()

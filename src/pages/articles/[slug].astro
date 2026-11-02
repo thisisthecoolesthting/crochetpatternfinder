@@ -10,7 +10,7 @@ import MedicalDisclaimer from '@/components/MedicalDisclaimer.astro';
 import AffiliateDisclosure from '@/components/AffiliateDisclosure.astro';
 import TopPicksBlock from '@/components/TopPicksBlock.astro';
 import ProductSidebar from '@/components/ProductSidebar.astro';
-import PhoneCasePromo from '@/components/PhoneCasePromo.astro';
+import DigitalGuideOffer from '@/components/DigitalGuideOffer.astro';
 import ArticleToC from '@/components/ArticleToC.astro';
 import { getCollection, getEntry } from 'astro:content';
 import { getRelatedProductsFromBody } from '@/utils/related-products';
@@ -148,7 +148,7 @@ const faqSchema =
 
       <AdSlot position="mid_content" label="pre-body" />
 
-      <PhoneCasePromo placement="inline" />
+      <DigitalGuideOffer placement="inline" />
 
       <div class="prose prose-lg prose-ink max-w-none">
         <Content />
@@ -180,7 +180,7 @@ const faqSchema =
 
     <div class="hidden xl:block w-52 flex-shrink-0">
       {relatedProducts.length > 0 && <ProductSidebar products={relatedProducts} />}
-      <PhoneCasePromo placement="sidebar" />
+      <DigitalGuideOffer placement="sidebar" />
     </div>
   </div>
 

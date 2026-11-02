@@ -1,0 +1,22 @@
+[Unit]
+Description=CrochetPatternFinder search API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/apps/crochetpatternfinder/current
+Environment=CROCHET_PATTERN_DB=/srv/apps/crochetpatternfinder/current/patterns.db
+ExecStart=/opt/crochetpatternfinder-api/bin/gunicorn --workers 2 --bind 127.0.0.1:3088 --access-logfile - --error-logfile - api.search:app
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+ReadWritePaths=/srv/apps/crochetpatternfinder
+
+[Install]
+WantedBy=multi-user.target

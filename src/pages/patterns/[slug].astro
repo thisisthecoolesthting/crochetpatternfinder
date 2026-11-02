@@ -1,0 +1,90 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import DigitalGuideOffer from '@/components/DigitalGuideOffer.astro';
+
+type Landing = {
+  slug: string;
+  title: string;
+  description: string;
+  intro: string;
+  query: string;
+  checks: string[];
+};
+
+export function getStaticPaths() {
+  const landings: Landing[] = [
+  {
+    slug: 'chunky-shawls',
+    title: 'Chunky Crochet Shawl Patterns',
+    description: 'Find chunky crochet shawl patterns and check yarn weight, hook size, drape, and yardage before you start.',
+    intro: 'Chunky shawls work up quickly, but the fabric can become stiff if the hook is too small or the yarn is substituted by name alone. Use the pattern finder to compare options, then verify the designer’s gauge and finished measurements.',
+    query: 'chunky shawl',
+    checks: [
+      'Confirm whether the pattern calls for bulky (category 5) or super bulky (category 6) yarn.',
+      'Check finished wingspan and depth instead of relying on one-size language.',
+      'Swatch the main stitch pattern and judge drape before committing the full yardage.',
+    ],
+  },
+  {
+    slug: 'dk-bags',
+    title: 'DK Yarn Crochet Bag Patterns',
+    description: 'Browse crochet bag patterns designed for DK yarn, with practical checks for structure, lining, straps, and gauge.',
+    intro: 'DK yarn can make a lighter, more flexible crochet bag than worsted yarn. The best pattern depends on whether you want a soft market bag, a structured tote, or a lined everyday bag.',
+    query: 'DK yarn bag',
+    checks: [
+      'Look for dense stitches or a lining when the bag needs to hold small items.',
+      'Check whether the strap is reinforced; crochet straps can stretch under weight.',
+      'Match fiber as well as weight—cotton behaves differently from wool or acrylic.',
+    ],
+  },
+  {
+    slug: 'super-fine-yarn',
+    title: 'Super Fine Yarn Crochet Patterns',
+    description: 'Find crochet patterns for super fine category 1 yarn and avoid common gauge, hook-size, and yardage mistakes.',
+    intro: 'Super fine yarn creates light fabric and fine detail, but it also makes gauge and yardage errors more expensive. Start with patterns that clearly state the yarn category, meterage, hook size, and finished dimensions.',
+    query: 'super fine yarn',
+    checks: [
+      'Verify that “super fine” means category 1 rather than lace-weight category 0.',
+      'Use the designer’s gauge as the starting point; hook size alone cannot predict fabric.',
+      'Compare yardage or meterage, not just the number of skeins.',
+    ],
+  },
+  ];
+  return landings.map((item) => ({ params: { slug: item.slug }, props: { item } }));
+}
+
+const { item } = Astro.props as { item: Landing };
+const searchHref = `/find/?q=${encodeURIComponent(item.query)}`;
+---
+
+<BaseLayout title={item.title} description={item.description}>
+  <main class="max-w-4xl mx-auto px-5 py-12 md:py-16">
+    <nav aria-label="Breadcrumb" class="text-sm text-ink-500 mb-6">
+      <a href="/" class="no-underline hover:underline">Home</a>
+      <span aria-hidden="true"> / </span>
+      <span>Patterns</span>
+    </nav>
+
+    <article class="prose prose-lg prose-ink max-w-none">
+      <p class="text-sm font-semibold uppercase tracking-[0.16em] text-terracotta-600">Pattern collection</p>
+      <h1>{item.title}</h1>
+      <p class="lead">{item.intro}</p>
+
+      <h2>What to check before choosing a pattern</h2>
+      <ul>
+        {item.checks.map((check) => <li>{check}</li>)}
+      </ul>
+
+      <p>
+        Pattern availability and designer instructions can change. Open the original pattern and confirm its current yarn,
+        sizing, gauge, and usage terms before beginning the project.
+      </p>
+
+      <a href={searchHref} class="btn-primary no-underline">Search matching patterns →</a>
+    </article>
+
+    <div class="mt-12">
+      <DigitalGuideOffer placement="inline" />
+    </div>
+  </main>
+</BaseLayout>

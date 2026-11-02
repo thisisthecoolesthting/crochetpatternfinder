@@ -22,6 +22,9 @@ export const GET: APIRoute = async () => {
   urls.push({ loc: `${SITE}/products`,  changefreq: 'daily',   priority: '0.9' });
   urls.push({ loc: `${SITE}/pillars`,   changefreq: 'weekly',  priority: '0.8' });
   urls.push({ loc: `${SITE}/articles`,  changefreq: 'weekly',  priority: '0.7' });
+  urls.push({ loc: `${SITE}/patterns/chunky-shawls/`, changefreq: 'monthly', priority: '0.8' });
+  urls.push({ loc: `${SITE}/patterns/dk-bags/`, changefreq: 'monthly', priority: '0.8' });
+  urls.push({ loc: `${SITE}/patterns/super-fine-yarn/`, changefreq: 'monthly', priority: '0.8' });
 
   for (const p of products) {
     const last = p.data.lastSeen ? new Date(p.data.lastSeen).toISOString().split('T')[0] : undefined;

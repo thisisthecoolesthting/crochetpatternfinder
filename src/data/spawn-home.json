@@ -109,7 +109,7 @@
       "list_id": ""
     },
     "phone_case_promo": {
-      "enabled": true,
+      "enabled": false,
       "store_url": "https://phonecasesforall.com",
       "headline": "Custom phone cases, free shipping",
       "subhead": "Thousands of designs for iPhone & Samsung \u2014 from our own shop.",

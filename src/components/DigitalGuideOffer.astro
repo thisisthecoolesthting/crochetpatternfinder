@@ -1,0 +1,51 @@
+---
+import { DIGITAL_OFFER as offer } from '@/data/digital-offer';
+
+interface Props {
+  placement?: 'inline' | 'sidebar' | 'footer';
+}
+
+const { placement = 'inline' } = Astro.props;
+const sourcePage = Astro.url.pathname;
+const checkout = new URL(offer.checkoutUrl);
+checkout.searchParams.set('source_site', offer.siteSlug);
+checkout.searchParams.set('source_page', sourcePage);
+checkout.searchParams.set('offer_id', offer.offerId);
+checkout.searchParams.set('utm_source', offer.siteSlug);
+checkout.searchParams.set('utm_medium', 'owned_content');
+checkout.searchParams.set('utm_campaign', 'digital_guide');
+checkout.searchParams.set('utm_content', `${placement}:${sourcePage}`);
+const shellClass = placement === 'sidebar'
+  ? 'rounded-2xl border border-terracotta-300/40 bg-cream-50 p-5 shadow-soft'
+  : 'rounded-3xl border border-terracotta-300/40 bg-gradient-to-br from-cream-50 to-white p-6 md:p-8 shadow-soft';
+---
+
+<aside
+  class:list={['not-prose', shellClass]}
+  aria-label={`Printable guide: ${offer.title}`}
+  data-guide-offer
+  data-offer-id={offer.offerId}
+  data-offer-placement={placement}
+  data-offer-value={offer.value}
+  data-source-site={offer.siteSlug}
+  data-source-page={sourcePage}
+>
+  <p class="text-xs font-semibold uppercase tracking-[0.16em] text-terracotta-600">Printable guide</p>
+  <h2 class:list={['font-display text-ink-900 !mt-2 mb-2', placement === 'sidebar' ? 'text-xl' : 'text-2xl md:text-3xl']}>
+    {offer.title}
+  </h2>
+  <p class="text-sm md:text-base leading-relaxed text-ink-700">{offer.description}</p>
+  <a
+    href={checkout.toString()}
+    class="btn-primary mt-5 no-underline"
+    data-offer-cta
+    data-offer-id={offer.offerId}
+    data-offer-placement={placement}
+    data-offer-value={offer.value}
+    data-source-site={offer.siteSlug}
+    data-source-page={sourcePage}
+  >
+    Get the PDF · {offer.priceLabel}
+  </a>
+  <p class="mt-3 text-xs text-ink-500">One-time purchase · instant download · {offer.pageCount} · secure checkout by Stripe</p>
+</aside>

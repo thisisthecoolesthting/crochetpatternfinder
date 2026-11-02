@@ -157,14 +157,32 @@ const faqSchema = faqs.length
     return res.json();
   }
 
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, function(char) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
+    });
+  }
+
+  function safeHttpUrl(value, base) {
+    try {
+      const url = new URL(value, base || window.location.origin);
+      return (url.protocol === 'https:' || url.protocol === 'http:') ? url.href : '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   function patternCard(p) {
-    const imgHtml = p.image_url
-      ? '<img src="' + p.image_url + '" alt="" loading="lazy" style="width:100%;height:160px;object-fit:cover;background:#f5f0e8;" onerror="this.parentElement.style.display=\'none\'">'
+    const sourceUrl = safeHttpUrl(p.source_url);
+    if (!sourceUrl) return '';
+    const imageUrl = safeHttpUrl(p.image_url, sourceUrl);
+    const imgHtml = imageUrl
+      ? '<img src="' + escapeHtml(imageUrl) + '" alt="" loading="lazy" style="width:100%;height:160px;object-fit:cover;background:#f5f0e8;" onerror="this.parentElement.style.display=\'none\'">'
       : '<div style="width:100%;height:160px;background:#f5f0e8;display:flex;align-items:center;justify-content:center;font-size:2.5rem;">&#x1F9F6;</div>';
-    const catBadge = (p.category && p.category !== 'General') ? ' &middot; ' + p.category : '';
-    const diff = p.difficulty ? '<span style="font-size:0.75rem;color:#e07a4f;">' + p.difficulty + '</span>' : '';
+    const catBadge = (p.category && p.category !== 'General') ? ' &middot; ' + escapeHtml(p.category) : '';
+    const diff = p.difficulty ? '<span style="font-size:0.75rem;color:#e07a4f;">' + escapeHtml(p.difficulty) + '</span>' : '';
     return (
-      '<a href="' + p.source_url + '" target="_blank" rel="noopener noreferrer" '
+      '<a href="' + escapeHtml(sourceUrl) + '" target="_blank" rel="noopener noreferrer" '
       + 'style="display:flex;flex-direction:column;background:white;border-radius:1rem;'
       + 'border:1px solid #eee;overflow:hidden;text-decoration:none;'
       + 'box-shadow:0 1px 3px rgba(0,0,0,.07);transition:box-shadow .15s;" '
@@ -174,10 +192,10 @@ const faqSchema = faqs.length
       + '<div style="padding:0.75rem;flex:1;display:flex;flex-direction:column;">'
       + '<h3 style="font-size:0.875rem;font-weight:600;color:#1a1a2e;line-height:1.4;margin:0 0 0.25rem;'
       + 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">'
-      + p.title + '</h3>'
+      + escapeHtml(p.title) + '</h3>'
       + diff
       + '<span style="font-size:0.7rem;color:#999;margin-top:auto;padding-top:0.5rem;">'
-      + p.source + catBadge + '</span>'
+      + escapeHtml(p.source) + catBadge + '</span>'
       + '</div></a>'
     );
   }
@@ -288,6 +306,10 @@ const faqSchema = faqs.length
   });
 
   document.getElementById('load-more').addEventListener('click', function() { render(false); });
+
+  const initialParams = new URLSearchParams(window.location.search);
+  currentQ = (initialParams.get('q') || '').trim();
+  if (currentQ) document.getElementById('search-input').value = currentQ;
 
   loadStats();
   render(true);
